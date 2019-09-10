@@ -9,7 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// BuildCreateQuery accepts a target table name and a struct and attempts to build a valid SQL insert statement for use
+// BuildCreateQuery accepts a target table name and a protobuf message and attempts to build a valid SQL insert statement for use
 // with sqlx.Named, ignoring any struct fields with default values. Fields must be tagged with `db:""` in order to be
 // included in the result string.
 func BuildCreateQuery(target string, source interface{}) (string, []interface{}, error) {
@@ -138,7 +138,7 @@ func BuildReadQuery(target string, source interface{}) (string, []interface{}, e
 // and attempts to build a valid sql update statement for use with sqlx.Named, ignoring any struct fields not present
 // in `fieldMask`. Struct fields must also be tagged with `db:""`, and the primary key should be tagged as
 // `primary_key` otherwise this function will return an invalid query
-func BuildUpdateQuery(target string, source interface{}, fieldMask map[string]int) (string, []interface{}, error) {
+func BuildUpdateQuery(target string, source interface{}, fieldMask map[string]int32) (string, []interface{}, error) {
 	v := reflect.ValueOf(source).Elem()
 	t := v.Type()
 
