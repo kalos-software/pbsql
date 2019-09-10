@@ -44,9 +44,15 @@ func BuildCreateQuery(target string, source interface{}) (string, []interface{},
 	return sqlx.Named(result, source)
 }
 
-// BuildDeleteQuery accepts a target table name and a struct and attempts to build a valid SQL delete statement for use
-// with sqlx.Named by attempting to identify the struct field tagged as `primary_key:"y"`. This function returns a
-// nullsafe query if nullable struct fields are properly tagged as `nullable:"y"`
+// BuildDeleteQuery accepts a target table name and a protobuf message and attempts to build a valid SQL
+// delete statement by utilizing struct tags to denote information such as database field names and
+// whether something is a primary key. If successful, returns a SQL statement in the form of a string,
+// a slice of args to interpolate, and a nil error.
+//
+// This function returns a nullsafe query if nullable struct fields are properly tagged as `nullable:"y"`.
+//
+// If an IsActive field is detected (is_active), this func returns an update statement that sets is_active to 0,
+// otherwise it returns a delete statement
 func BuildDeleteQuery(target string, source interface{}) (string, []interface{}, error) {
 	v := reflect.ValueOf(source).Elem()
 	t := v.Type()
@@ -55,8 +61,8 @@ func BuildDeleteQuery(target string, source interface{}) (string, []interface{},
 	isActive, hasIsActive := t.FieldByName("IsActive")
 	if hasIsActive {
 		dbName := isActive.Tag.Get("db")
-		builder.WriteString("UPDATE " + target + "SET ")
-		builder.WriteString(dbName + " = :" + dbName)
+		builder.WriteString("UPDATE " + target + " SET ")
+		builder.WriteString(dbName + " = :" + dbName + " WHERE ")
 	} else {
 		builder.WriteString("DELETE FROM " + target + " WHERE ")
 	}
@@ -76,9 +82,11 @@ func BuildDeleteQuery(target string, source interface{}) (string, []interface{},
 	return sqlx.Named(builder.String(), source)
 }
 
-// BuildReadQuery accepts a target table name and a struct and attempts to build a valid SQL select statement for use
-// with sqlx.Named, ignoring any struct fields with default values. Fields must be tagged with `db:""` in order to be
+// BuildReadQuery accepts a target table name and a protobuf message and attempts to build a valid SQL select statement,
+// ignoring any struct fields with default values when writing predicates. Fields must be tagged with `db:""` in order to be
 // included in the result string.
+//
+// Returns a SQL statement as a string, a slice of args to interpolate, and an error
 func BuildReadQuery(target string, source interface{}) (string, []interface{}, error) {
 	nullHandler := "ifnull("
 	if sqlDriver := os.Getenv("GRPC_SQL_DRIVER"); sqlDriver == "pgsql" {

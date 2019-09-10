@@ -6,11 +6,12 @@ import (
 )
 
 type TestStruct struct {
-	ID     int32   `db:"id" primary_key:"y"`
-	Name   string  `db:"name" nullable:"y"`
-	Date   string  `db:"date" nullable:"y"`
-	GeoLat float64 `db:"geolocation_lat" nullable:"y"`
-	GeoLng float64 `db:"geolocation_lng" nullable:"y"`
+	ID       int32   `db:"id" primary_key:"y"`
+	Name     string  `db:"name" nullable:"y"`
+	Date     string  `db:"date" nullable:"y"`
+	GeoLat   float64 `db:"geolocation_lat" nullable:"y"`
+	GeoLng   float64 `db:"geolocation_lng" nullable:"y"`
+	IsActive int32   `db:"is_active"`
 }
 
 func TestBuilders(t *testing.T) {
@@ -29,7 +30,7 @@ func TestBuilders(t *testing.T) {
 	fmt.Println(readQry)
 	fmt.Printf("%v", args)
 
-	fieldMask := make(map[string]int, 2)
+	fieldMask := make(map[string]int32, 2)
 	fieldMask["GeoLat"] = 0
 	fieldMask["GeoLng"] = 1
 	updateQry, args, err := BuildUpdateQuery("test_table", &target, fieldMask)
