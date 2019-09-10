@@ -41,7 +41,7 @@ func BuildCreateQuery(target string, source interface{}) (string, []interface{},
 	cols.WriteString(") VALUES ")
 	vals.WriteString(")")
 	result := strings.ReplaceAll(cols.String()+vals.String(), "(, ", "(")
-	return sqlx.Named(result, target)
+	return sqlx.Named(result, source)
 }
 
 // BuildDeleteQuery accepts a target table name and a struct and attempts to build a valid SQL delete statement for use
@@ -73,7 +73,7 @@ func BuildDeleteQuery(target string, source interface{}) (string, []interface{},
 		}
 	}
 
-	return sqlx.Named(builder.String(), target)
+	return sqlx.Named(builder.String(), source)
 }
 
 // BuildReadQuery accepts a target table name and a struct and attempts to build a valid SQL select statement for use
@@ -131,7 +131,7 @@ func BuildReadQuery(target string, source interface{}) (string, []interface{}, e
 	core.WriteString(target)
 	core.WriteString(predicate.String())
 	result := strings.Replace(core.String(), ", FROM", " FROM", 1)
-	return sqlx.Named(result, target)
+	return sqlx.Named(result, source)
 }
 
 // BuildUpdateQuery accepts a target table name `target`, a struct `source`, and a list of struct fields `fieldMask`
@@ -170,7 +170,7 @@ func BuildUpdateQuery(target string, source interface{}, fieldMask map[string]in
 	}
 
 	result := strings.Replace(builder.String()+predicate.String(), ", WHERE", " WHERE", 1)
-	return sqlx.Named(result, target)
+	return sqlx.Named(result, source)
 }
 
 // `notDefault` checks if a value is set to it's unitialized default, e.g. whether or not an `int32` value is `0`
