@@ -71,24 +71,23 @@ Implementation:
 
 ```go
 func (s *Service) Create(ctx context.Context, req *User) (*User, error) {
+  // create query string
   qryString := pbsql.BuildCreateQuery("user", req)
+  // since the query string uses named args we can use sqlx.Named to convert it
+  // to a query string using `?` instead, sqlx.Named also returns a slice of all
+  // the target args
   qry, args, err := sqlx.Named(qryStr, req)
   if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to create prepared query string %v", err)
-	}
+    return nil, status.Errorf(codes.Internal, "failed to create prepared query string %v", err)
+  }
 
-	res, err := s.DB.Exec(qry, args...)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to execute query %v", err)
-	}
-
-	newID, err := res.LastInsertId()
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to retrieve last insert ID %v", err)
-	}
-
-	req.Id = int32(newID)
-	return req, nil
+  // now simple call the appropriate function and expand the args slice
+  // sqlx.DB.Exec is great if you don't need a result set otherwise use
+  // sqlx.DB.Queryx or sqlx.DB.QueryRowx
+  res, err := s.DB.Exec(qry, args...)
+  if err != nil {
+    return nil, status.Errorf(codes.Internal, "failed to execute query %v", err)
+  }
 }
 ```
 
@@ -101,16 +100,23 @@ func (s *UserSvc) List(ctx context.Context, req *User) (*User, error) {
   qryString := pbsql.BuildReadQuery("user", req)
   qry, args, err := sqlx.Named(qryStr, req)
   if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to create prepared query string %v", err)
+    return nil, status.Errorf(codes.Internal, "failed to create prepared query string %v", err)
   }
   // add raw SQL to your query string
   limitedQry := qry + " OFFSET ?, LIMIT ?"
 
   // append the offset and limit to args before expanding
-	rows, err := s.DB.Queryx(limitedQry, append(args, 0, 50)...)
-	if err != nil {
-		return status.Errorf(codes.Internal, "failed to execute query %v", err)
-	}
-	defer rows.Close()
+  rows, err := s.DB.Queryx(limitedQry, append(args, 0, 50)...)
+  if err != nil {
+    return status.Errorf(codes.Internal, "failed to execute query %v", err)
+  }
+  defer rows.Close()
 }
 ```
+
+## Roadmap
+
+- [ ] Support a `default_value` tag in favor of guessing the default value at runtime
+- [ ] Support including foreign key related entities in query results
+- [ ] Support field masks in read queries
+- [ ] Support other DBMS
