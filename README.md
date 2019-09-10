@@ -1,6 +1,7 @@
 # pbsql
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/rmilejcz/pbsql)](https://goreportcard.com/report/github.com/rmilejcz/pbsql)
+[![codecov](https://codecov.io/gh/rmilejcz/pbsql/branch/master/graph/badge.svg)](https://codecov.io/gh/rmilejcz/pbsql)
 
 A reflection-based, lightweight, efficient, and nullsafe query generator for protobufs
 
