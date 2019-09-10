@@ -19,17 +19,17 @@ This library assumes that:
 
 - you are okay with sending and recieving the same message over the wire, e.g.:
 
-  - ```
-    rpc Create(User) returns (User) {}
-    rpc Get(User)    returns (User) {}
-    rpc Update(User) returns (User) {}
-    ```
+  ```
+  rpc Create(User) returns (User) {}
+  rpc Get(User)    returns (User) {}
+  rpc Update(User) returns (User) {}
+  ```
 
 - your proto structure is friendly to simple field masks (i.e. nested messages are not supported):
 
-  - ```
-    map<string, int> field_mask = 1;
-    ```
+  ```
+  map<string, int> field_mask = 1;
+  ```
 
 - all time values can be represented as `string` instead of `protobuf.Timestamp`:
   - this is especially convenient for SQL since a time value of `2019-09-12 08:30:00` can be queried with string literals
