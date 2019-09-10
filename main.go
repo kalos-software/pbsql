@@ -5,12 +5,14 @@ import (
 	"os"
 	"reflect"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // BuildCreateQuery accepts a target table name and a struct and attempts to build a valid SQL insert statement for use
 // with sqlx.Named, ignoring any struct fields with default values. Fields must be tagged with `db:""` in order to be
 // included in the result string.
-func BuildCreateQuery(target string, source interface{}) string {
+func BuildCreateQuery(target string, source interface{}) (string, []interface{}, error) {
 	t := reflect.ValueOf(source).Elem()
 	var cols strings.Builder
 	var vals strings.Builder
@@ -38,13 +40,14 @@ func BuildCreateQuery(target string, source interface{}) string {
 	}
 	cols.WriteString(") VALUES ")
 	vals.WriteString(")")
-	return strings.ReplaceAll(cols.String()+vals.String(), "(, ", "(")
+	result := strings.ReplaceAll(cols.String()+vals.String(), "(, ", "(")
+	return sqlx.Named(result, target)
 }
 
 // BuildDeleteQuery accepts a target table name and a struct and attempts to build a valid SQL delete statement for use
 // with sqlx.Named by attempting to identify the struct field tagged as `primary_key:"y"`. This function returns a
 // nullsafe query if nullable struct fields are properly tagged as `nullable:"y"`
-func BuildDeleteQuery(target string, source interface{}) string {
+func BuildDeleteQuery(target string, source interface{}) (string, []interface{}, error) {
 	v := reflect.ValueOf(source).Elem()
 	t := v.Type()
 	var builder strings.Builder
@@ -70,13 +73,13 @@ func BuildDeleteQuery(target string, source interface{}) string {
 		}
 	}
 
-	return builder.String()
+	return sqlx.Named(builder.String(), target)
 }
 
 // BuildReadQuery accepts a target table name and a struct and attempts to build a valid SQL select statement for use
 // with sqlx.Named, ignoring any struct fields with default values. Fields must be tagged with `db:""` in order to be
 // included in the result string.
-func BuildReadQuery(target string, source interface{}) string {
+func BuildReadQuery(target string, source interface{}) (string, []interface{}, error) {
 	nullHandler := "ifnull("
 	if sqlDriver := os.Getenv("GRPC_SQL_DRIVER"); sqlDriver == "pgsql" {
 		nullHandler = "coalesce("
@@ -127,14 +130,15 @@ func BuildReadQuery(target string, source interface{}) string {
 	core.WriteString("FROM ")
 	core.WriteString(target)
 	core.WriteString(predicate.String())
-	return strings.Replace(core.String(), ", FROM", " FROM", 1)
+	result := strings.Replace(core.String(), ", FROM", " FROM", 1)
+	return sqlx.Named(result, target)
 }
 
-// BuildUpdateQuery accepts a target table name `target`, a struct `source`, and a list of struct fields `validFields`
-// and attempts to build a valid slq update statement for use with sqlx.Named, ignoring any struct fields not present
-// in `validFields`. Struct fields must also be tagged with `db:""`, and the primary key should be tagged as
+// BuildUpdateQuery accepts a target table name `target`, a struct `source`, and a list of struct fields `fieldMask`
+// and attempts to build a valid sql update statement for use with sqlx.Named, ignoring any struct fields not present
+// in `fieldMask`. Struct fields must also be tagged with `db:""`, and the primary key should be tagged as
 // `primary_key` otherwise this function will return an invalid query
-func BuildUpdateQuery(target string, source interface{}, fieldMask map[string]int) string {
+func BuildUpdateQuery(target string, source interface{}, fieldMask map[string]int) (string, []interface{}, error) {
 	v := reflect.ValueOf(source).Elem()
 	t := v.Type()
 
@@ -165,7 +169,8 @@ func BuildUpdateQuery(target string, source interface{}, fieldMask map[string]in
 		}
 	}
 
-	return strings.Replace(builder.String()+predicate.String(), ", WHERE", " WHERE", 1)
+	result := strings.Replace(builder.String()+predicate.String(), ", WHERE", " WHERE", 1)
+	return sqlx.Named(result, target)
 }
 
 // `notDefault` checks if a value is set to it's unitialized default, e.g. whether or not an `int32` value is `0`

@@ -1,5 +1,7 @@
 # pbsql
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/rmilejcz/pbsql)](https://goreportcard.com/report/github.com/rmilejcz/pbsql)
+
 A reflection-based, lightweight, efficient, and nullsafe query generator for protobufs
 
 ## Why?
@@ -72,18 +74,14 @@ Implementation:
 ```go
 func (s *Service) Create(ctx context.Context, req *User) (*User, error) {
 
-  // create query string
-  qryString := pbsql.BuildCreateQuery("user", req)
-
-  // since the query string uses named args we can use sqlx.Named to convert it
-  // to a query string using `?` instead, sqlx.Named also returns a slice of all
-  // the target args
-  qry, args, err := sqlx.Named(qryStr, req)
+  // create query string, this also returns a []interface{} slice with each arg in order
+  // this query string uses `?` for interpolation (not named vars)
+  qry, args, err := pbsql.BuildCreateQuery("user", req)
   if err != nil {
     return nil, status.Errorf(codes.Internal, "failed to create prepared query string %v", err)
   }
 
-  // now simple call the appropriate function and expand the args slice
+  // now simply call the appropriate function and expand the args slice
   // sqlx.DB.Exec is great if you don't need a result set otherwise use
   // sqlx.DB.Queryx or sqlx.DB.QueryRowx
   res, err := s.DB.Exec(qry, args...)
@@ -99,8 +97,7 @@ The query builder doesn't handle any sort of limit or offset behavior, but since
 
 ```go
 func (s *UserSvc) List(ctx context.Context, req *User) (*User, error) {
-  qryString := pbsql.BuildReadQuery("user", req)
-  qry, args, err := sqlx.Named(qryStr, req)
+  qry, args, err := pbsql.BuildReadQuery("user", req)
   if err != nil {
     return nil, status.Errorf(codes.Internal, "failed to create prepared query string %v", err)
   }
