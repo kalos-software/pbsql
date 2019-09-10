@@ -71,8 +71,10 @@ Implementation:
 
 ```go
 func (s *Service) Create(ctx context.Context, req *User) (*User, error) {
+
   // create query string
   qryString := pbsql.BuildCreateQuery("user", req)
+
   // since the query string uses named args we can use sqlx.Named to convert it
   // to a query string using `?` instead, sqlx.Named also returns a slice of all
   // the target args
@@ -102,6 +104,7 @@ func (s *UserSvc) List(ctx context.Context, req *User) (*User, error) {
   if err != nil {
     return nil, status.Errorf(codes.Internal, "failed to create prepared query string %v", err)
   }
+
   // add raw SQL to your query string
   limitedQry := qry + " OFFSET ?, LIMIT ?"
 
