@@ -1,6 +1,6 @@
 # pbsql
 
-A lightweight and efficient **nullsafe** query generator for protobufs utilizing, reflection for use with sqlx
+A reflection-based, lightweight, efficient, and nullsafe query generator for protobufs
 
 ## Why?
 
