@@ -1,7 +1,7 @@
 package pbsql
 
 import (
-	"fmt"
+	"os"
 	"testing"
 )
 
@@ -14,36 +14,44 @@ type TestStruct struct {
 	IsActive int32   `db:"is_active"`
 }
 
-func TestBuilders(t *testing.T) {
-	target := TestStruct{ID: 1, Name: "Hello!", Date: "2019-01-01", GeoLat: 123.456, GeoLng: 654.321}
-	createQry, args, err := BuildCreateQuery("test_table", &target)
+var target TestStruct
+
+func TestMain(m *testing.M) {
+	target.ID = 1
+	target.Name = "Hello"
+	target.Date = "2019-01-01"
+	target.GeoLat = 123.456
+	target.GeoLng = 654.321
+	os.Exit(m.Run())
+}
+
+func TestBuildCreate(t *testing.T) {
+	_, _, err := BuildCreateQuery("test_table", &target)
 	if err != nil {
 		t.Fatal("BuildCreateQuery failed", err)
 	}
-	fmt.Println(createQry)
-	fmt.Printf("%v", args)
+}
 
-	readQry, args, err := BuildReadQuery("test_table", &target)
+func TestBuildRead(t *testing.T) {
+	_, _, err := BuildReadQuery("test_table", &target)
 	if err != nil {
 		t.Fatal("BuildReadQuery failed", err)
 	}
-	fmt.Println(readQry)
-	fmt.Printf("%v", args)
+}
 
+func TestBuildUpdate(t *testing.T) {
 	fieldMask := make(map[string]int32, 2)
 	fieldMask["GeoLat"] = 0
 	fieldMask["GeoLng"] = 1
-	updateQry, args, err := BuildUpdateQuery("test_table", &target, fieldMask)
+	_, _, err := BuildUpdateQuery("test_table", &target, fieldMask)
 	if err != nil {
 		t.Fatal("BuildUpdateQuery failed", err)
 	}
-	fmt.Println(updateQry)
-	fmt.Printf("%v", args)
+}
 
-	deleteQry, args, err := BuildDeleteQuery("test_table", &target)
+func TestBuildDelete(t *testing.T) {
+	_, _, err := BuildDeleteQuery("test_table", &target)
 	if err != nil {
 		t.Fatal("BuildDeleteQuery failed", err)
 	}
-	fmt.Println(deleteQry)
-	fmt.Printf("%v", args)
 }

@@ -1,1 +1,5 @@
 coverage.*
+*.prof
+*.test
+*.out
+pbsql
