@@ -16,9 +16,7 @@ func BuildCreateQuery(target string, source interface{}) (string, []interface{},
 	t := reflect.ValueOf(source).Elem()
 	var cols strings.Builder
 	var vals strings.Builder
-	cols.WriteString("INSERT INTO ")
-	cols.WriteString(target)
-	cols.WriteString(" (")
+	fmt.Fprintf(&cols, "INSERT INTO %s (", target)
 	vals.WriteString("(")
 
 	for i := 0; i < t.NumField(); i++ {
@@ -34,13 +32,12 @@ func BuildCreateQuery(target string, source interface{}) (string, []interface{},
 				vals.WriteString(", ")
 			}
 			cols.WriteString(tag)
-			vals.WriteString(":")
-			vals.WriteString(tag)
+			fmt.Fprintf(&vals, ":%s", tag)
 		}
 	}
-	cols.WriteString(") VALUES ")
 	vals.WriteString(")")
-	result := strings.ReplaceAll(cols.String()+vals.String(), "(, ", "(")
+	fmt.Fprintf(&cols, ") VALUES %s", vals.String())
+	result := strings.ReplaceAll(cols.String(), "(, ", "(")
 	return sqlx.Named(result, source)
 }
 
@@ -61,10 +58,9 @@ func BuildDeleteQuery(target string, source interface{}) (string, []interface{},
 	isActive, hasIsActive := t.FieldByName("IsActive")
 	if hasIsActive {
 		dbName := isActive.Tag.Get("db")
-		builder.WriteString("UPDATE " + target + " SET ")
-		builder.WriteString(dbName + " = :" + dbName + " WHERE ")
+		fmt.Fprintf(&builder, "UPDATE %s SET %s = :%s WHERE ", target, dbName, dbName)
 	} else {
-		builder.WriteString("DELETE FROM " + target + " WHERE ")
+		fmt.Fprintf(&builder, "DELETE FROM %s WHERE ", target)
 	}
 
 	for i := 0; i < v.NumField(); i++ {
@@ -72,9 +68,7 @@ func BuildDeleteQuery(target string, source interface{}) (string, []interface{},
 		isPkey := typeField.Tag.Get("primary_key") != ""
 		if isPkey {
 			dbName := typeField.Tag.Get("db")
-			builder.WriteString(dbName)
-			builder.WriteString(" = :")
-			builder.WriteString(dbName)
+			fmt.Fprintf(&builder, "%s = :%s", dbName, dbName)
 			break
 		}
 	}
@@ -109,35 +103,22 @@ func BuildReadQuery(target string, source interface{}) (string, []interface{}, e
 		nullable := typeField.Tag.Get("nullable")
 
 		if nullable != "" {
-			fields.WriteString(nullHandler)
-			fields.WriteString(dbName)
-			fields.WriteString(", ")
-			fields.WriteString(getDefault(typeName))
-			fields.WriteString(") as ")
-			fields.WriteString(dbName)
-			fields.WriteString(", ")
+			fmt.Fprintf(&fields, "%s%s, %s) as %s, ", nullHandler, dbName, getDefault(typeName), dbName)
 		} else if dbName != "" {
-			fields.WriteString(dbName)
-			fields.WriteString(", ")
+			fmt.Fprintf(&fields, "%s, ", dbName)
 		}
 
 		if valField.CanInterface() && notDefault(typeName, valField.Interface()) && dbName != "" {
-			predicate.WriteString(" AND ")
-			predicate.WriteString(dbName)
+			fmt.Fprintf(&predicate, " AND %s", dbName)
 			if typeName == "string" {
-				predicate.WriteString(" LIKE :")
-				predicate.WriteString(dbName)
+				fmt.Fprintf(&predicate, " LIKE :%s", dbName)
 			} else {
-				predicate.WriteString(" = :")
-				predicate.WriteString(dbName)
+				fmt.Fprintf(&predicate, " = :%s", dbName)
 			}
 		}
 	}
 
-	core.WriteString(fields.String())
-	core.WriteString("FROM ")
-	core.WriteString(target)
-	core.WriteString(predicate.String())
+	fmt.Fprintf(&core, "%sFROM %s%s", fields.String(), target, predicate.String())
 	result := strings.Replace(core.String(), ", FROM", " FROM", 1)
 	return sqlx.Named(result, source)
 }
@@ -151,9 +132,7 @@ func BuildUpdateQuery(target string, source interface{}, fieldMask map[string]in
 	t := v.Type()
 
 	var builder strings.Builder
-	builder.WriteString("UPDATE ")
-	builder.WriteString(target)
-	builder.WriteString(" SET ")
+	fmt.Fprintf(&builder, "UPDATE %s SET ", target)
 
 	var predicate strings.Builder
 	for i := 0; i < v.NumField(); i++ {
@@ -164,20 +143,15 @@ func BuildUpdateQuery(target string, source interface{}, fieldMask map[string]in
 		if valField.CanInterface() && dbName != "" {
 			isPrimaryKey := typeField.Tag.Get("primary_key") != ""
 			if isPrimaryKey {
-				predicate.WriteString("WHERE ")
-				predicate.WriteString(dbName)
-				predicate.WriteString(" = :")
-				predicate.WriteString(dbName)
+				fmt.Fprintf(&predicate, "WHERE %s = :%s", dbName, dbName)
 			} else if _, ok := fieldMask[typeField.Name]; ok {
-				builder.WriteString(dbName)
-				builder.WriteString(" = :")
-				builder.WriteString(dbName)
-				builder.WriteString(", ")
+				fmt.Fprintf(&builder, "%s = :%s,", dbName, dbName)
 			}
 		}
 	}
 
-	result := strings.Replace(builder.String()+predicate.String(), ", WHERE", " WHERE", 1)
+	builder.WriteString(predicate.String())
+	result := strings.Replace(builder.String(), ", WHERE", " WHERE", 1)
 	return sqlx.Named(result, source)
 }
 
