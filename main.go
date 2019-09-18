@@ -145,7 +145,7 @@ func BuildUpdateQuery(target string, source interface{}, fieldMask map[string]in
 			if isPrimaryKey {
 				fmt.Fprintf(&predicate, "WHERE %s = :%s", dbName, dbName)
 			} else if _, ok := fieldMask[typeField.Name]; ok {
-				fmt.Fprintf(&builder, "%s = :%s,", dbName, dbName)
+				fmt.Fprintf(&builder, "%s = :%s, ", dbName, dbName)
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 package pbsql
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
@@ -43,10 +44,12 @@ func TestBuildUpdate(t *testing.T) {
 	fieldMask := make(map[string]int32, 2)
 	fieldMask["GeoLat"] = 0
 	fieldMask["GeoLng"] = 1
-	_, _, err := BuildUpdateQuery("test_table", &target, fieldMask)
+	qry, args, err := BuildUpdateQuery("test_table", &target, fieldMask)
 	if err != nil {
 		t.Fatal("BuildUpdateQuery failed", err)
 	}
+	fmt.Println(qry)
+	fmt.Printf("%#v\n", args)
 }
 
 func TestBuildDelete(t *testing.T) {
