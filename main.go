@@ -37,7 +37,7 @@ func BuildCreateQuery(target string, source interface{}) (string, []interface{},
 				cols.WriteString(", ")
 				vals.WriteString(", ")
 			}
-			cols.WriteString(tag)
+			fmt.Fprintf(&cols, "%s.%s", target, tag)
 			fmt.Fprintf(&vals, ":%s", tag)
 		}
 	}
@@ -64,7 +64,7 @@ func BuildDeleteQuery(target string, source interface{}) (string, []interface{},
 	isActive, hasIsActive := t.FieldByName("IsActive")
 	if hasIsActive {
 		dbName := isActive.Tag.Get("db")
-		fmt.Fprintf(&builder, "UPDATE %s SET %s = :%s WHERE ", target, dbName, dbName)
+		fmt.Fprintf(&builder, "UPDATE %s SET %s.%s = :%s WHERE ", target, target, dbName, dbName)
 	} else {
 		fmt.Fprintf(&builder, "DELETE FROM %s WHERE ", target)
 	}
@@ -74,7 +74,7 @@ func BuildDeleteQuery(target string, source interface{}) (string, []interface{},
 		isPkey := typeField.Tag.Get("primary_key") != ""
 		if isPkey {
 			dbName := typeField.Tag.Get("db")
-			fmt.Fprintf(&builder, "%s = :%s", dbName, dbName)
+			fmt.Fprintf(&builder, "%s.%s = :%s", target, dbName, dbName)
 			break
 		}
 	}
@@ -109,13 +109,13 @@ func BuildReadQuery(target string, source interface{}) (string, []interface{}, e
 		nullable := typeField.Tag.Get("nullable")
 
 		if nullable != "" {
-			fmt.Fprintf(&fields, "%s%s, %s) as %s, ", nullHandler, dbName, getDefault(typeName), dbName)
+			fmt.Fprintf(&fields, "%s%s.%s, %s) as %s, ", nullHandler, target, dbName, getDefault(typeName), dbName)
 		} else if dbName != "" {
-			fmt.Fprintf(&fields, "%s, ", dbName)
+			fmt.Fprintf(&fields, "%s.%s, ", target, dbName)
 		}
 
 		if valField.CanInterface() && notDefault(typeName, valField.Interface()) && dbName != "" {
-			fmt.Fprintf(&predicate, " AND %s", dbName)
+			fmt.Fprintf(&predicate, " AND %s.%s", target, dbName)
 			if typeName == "string" {
 				fmt.Fprintf(&predicate, " LIKE :%s", dbName)
 			} else {
@@ -149,9 +149,9 @@ func BuildUpdateQuery(target string, source interface{}, fieldMask map[string]in
 		if valField.CanInterface() && dbName != "" {
 			isPrimaryKey := typeField.Tag.Get("primary_key") != ""
 			if isPrimaryKey {
-				fmt.Fprintf(&predicate, "WHERE %s = :%s", dbName, dbName)
+				fmt.Fprintf(&predicate, "WHERE %s.%s = :%s", target, dbName, dbName)
 			} else if _, ok := fieldMask[typeField.Name]; ok {
-				fmt.Fprintf(&builder, "%s = :%s, ", dbName, dbName)
+				fmt.Fprintf(&builder, "%s.%s = :%s, ", target, dbName, dbName)
 			}
 		}
 	}

@@ -1,7 +1,6 @@
 package pbsql
 
 import (
-	"fmt"
 	"os"
 	"testing"
 )
@@ -19,7 +18,6 @@ var target TestStruct
 
 func TestMain(m *testing.M) {
 	target.ID = 1
-	target.Name = "Hello"
 	target.Date = "2019-01-01"
 	target.GeoLat = 123.456
 	target.GeoLng = 654.321
@@ -27,34 +25,36 @@ func TestMain(m *testing.M) {
 }
 
 func TestBuildCreate(t *testing.T) {
-	_, _, err := BuildCreateQuery("test_table", &target)
+	qry, _, err := BuildCreateQuery("test_table", &target)
 	if err != nil {
 		t.Fatal("BuildCreateQuery failed", err)
 	}
+	println(qry)
 }
 
 func TestBuildRead(t *testing.T) {
-	_, _, err := BuildReadQuery("test_table", &target)
+	qry, _, err := BuildReadQuery("test_table", &target)
 	if err != nil {
 		t.Fatal("BuildReadQuery failed", err)
 	}
+	println(qry)
 }
 
 func TestBuildUpdate(t *testing.T) {
 	fieldMask := make(map[string]int32, 2)
 	fieldMask["GeoLat"] = 0
 	fieldMask["GeoLng"] = 1
-	qry, args, err := BuildUpdateQuery("test_table", &target, fieldMask)
+	qry, _, err := BuildUpdateQuery("test_table", &target, fieldMask)
 	if err != nil {
 		t.Fatal("BuildUpdateQuery failed", err)
 	}
-	fmt.Println(qry)
-	fmt.Printf("%#v\n", args)
+	println(qry)
 }
 
 func TestBuildDelete(t *testing.T) {
-	_, _, err := BuildDeleteQuery("test_table", &target)
+	qry, _, err := BuildDeleteQuery("test_table", &target)
 	if err != nil {
 		t.Fatal("BuildDeleteQuery failed", err)
 	}
+	println(qry)
 }
