@@ -133,7 +133,7 @@ func BuildReadQuery(target string, source interface{}) (string, []interface{}, e
 // and attempts to build a valid sql update statement for use with sqlx.Named, ignoring any struct fields not present
 // in `fieldMask`. Struct fields must also be tagged with `db:""`, and the primary key should be tagged as
 // `primary_key` otherwise this function will return an invalid query
-func BuildUpdateQuery(target string, source interface{}, fieldMask map[string]int32) (string, []interface{}, error) {
+func BuildUpdateQuery(target string, source interface{}, fieldMask []string) (string, []interface{}, error) {
 	v := reflect.ValueOf(source).Elem()
 	t := v.Type()
 
@@ -150,7 +150,7 @@ func BuildUpdateQuery(target string, source interface{}, fieldMask map[string]in
 			isPrimaryKey := typeField.Tag.Get("primary_key") != ""
 			if isPrimaryKey {
 				fmt.Fprintf(&predicate, "WHERE %s.%s = :%s", target, dbName, dbName)
-			} else if _, ok := fieldMask[typeField.Name]; ok {
+			} else if findInMask(fieldMask, typeField.Name) {
 				fmt.Fprintf(&builder, "%s.%s = :%s, ", target, dbName, dbName)
 			}
 		}
@@ -190,4 +190,13 @@ func getDefault(typeName string) string {
 	default:
 		panic(fmt.Errorf("couldn't determine default value for provided type %s", typeName))
 	}
+}
+
+func findInMask(fieldMask []string, field string) bool {
+	for _, v := range fieldMask {
+		if v == field {
+			return true
+		}
+	}
+	return false
 }

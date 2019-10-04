@@ -57,9 +57,7 @@ func TestBuildRead(t *testing.T) {
 }
 
 func TestBuildUpdate(t *testing.T) {
-	fieldMask := make(map[string]int32, 2)
-	fieldMask["GeoLat"] = 0
-	fieldMask["GeoLng"] = 1
+	fieldMask := []string{"GeoLat", "GeoLng"}
 	qry, _, err := BuildUpdateQuery("test_table", &target, fieldMask)
 	if err != nil {
 		t.Fatal("BuildUpdateQuery failed", err)
