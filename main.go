@@ -125,6 +125,20 @@ func BuildReadQuery(target string, source interface{}) (string, []interface{}, e
 	}
 
 	fmt.Fprintf(&core, "%sFROM %s%s", fields.String(), target, predicate.String())
+
+	orderBy := t.FieldByName("OrderBy")
+	orderDir := t.FieldByName("OrderDir")
+	
+	if orderBy.String() != "" {
+		orderStr := fmt.Sprintf(" order by %s", orderBy.String())
+		if orderDir.String() != "" {
+			orderStr = fmt.Sprintf("%s %s", orderStr, orderDir.String())
+		} else {
+			orderStr = fmt.Sprintf("%s asc", orderStr)
+		}
+		fmt.Fprint(&core, orderStr)
+	}
+
 	result := strings.Replace(core.String(), ", FROM", " FROM", 1)
 	return sqlx.Named(result, source)
 }
