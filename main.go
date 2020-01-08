@@ -129,9 +129,9 @@ func BuildReadQuery(target string, source interface{}) (string, []interface{}, e
 	orderBy := t.FieldByName("OrderBy")
 	orderDir := t.FieldByName("OrderDir")
 	
-	if orderBy.String() != "" {
+	if orderBy.CanAddr() && orderBy.String() != "" {
 		orderStr := fmt.Sprintf(" order by %s", orderBy.String())
-		if orderDir.String() != "" {
+		if orderDir.CanAddr() && orderDir.String() != "" {
 			orderStr = fmt.Sprintf("%s %s", orderStr, orderDir.String())
 		} else {
 			orderStr = fmt.Sprintf("%s asc", orderStr)
