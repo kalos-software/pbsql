@@ -12,8 +12,6 @@ type TestStruct struct {
 	GeoLat   float64 `db:"geolocation_lat" nullable:"y"`
 	GeoLng   float64 `db:"geolocation_lng" nullable:"y"`
 	IsActive int32   `db:"is_active"`
-	OrderBy string
-	OrderDir string
 }
 
 var target TestStruct
@@ -31,7 +29,6 @@ func TestMain(m *testing.M) {
 	target.Date = "2019-01-01"
 	target.GeoLat = 123.456
 	target.GeoLng = 654.321
-	target.OrderBy = "id"
 	os.Exit(m.Run())
 }
 
