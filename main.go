@@ -168,7 +168,6 @@ func BuildReadQuery(target string, source interface{}) (string, []interface{}, e
 	}
 
 	result := strings.Replace(core.String(), ", FROM", " FROM", 1)
-	fmt.Println(result)
 	return sqlx.Named(result, source)
 }
 
