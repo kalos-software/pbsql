@@ -96,6 +96,7 @@ func BuildReadQuery(target string, source interface{}) (string, []interface{}, e
 	t := reflect.ValueOf(source).Elem()
 
 	var core strings.Builder
+	var joins strings.Builder
 	var fields strings.Builder
 	var predicate strings.Builder
 	core.WriteString("SELECT ")
@@ -107,24 +108,51 @@ func BuildReadQuery(target string, source interface{}) (string, []interface{}, e
 		typeName := valField.Type().Name()
 		dbName := typeField.Tag.Get("db")
 		nullable := typeField.Tag.Get("nullable")
+		foreignKey := typeField.Tag.Get("foreign_key")
+		foreignTable := typeField.Tag.Get("foreign_table")
+		localName := typeField.Tag.Get("local_name")
 
-		if nullable != "" {
-			fmt.Fprintf(&fields, "%s%s.%s, %s) as %s, ", nullHandler, target, dbName, getDefault(typeName), dbName)
-		} else if dbName != "" {
-			fmt.Fprintf(&fields, "%s.%s, ", target, dbName)
+		if dbName != "" {
+			if nullable != "" {
+				fmt.Fprintf(&fields, "%s%s.%s, %s) as %s, ", nullHandler, target, dbName, getDefault(typeName), dbName)
+			} else {
+				fmt.Fprintf(&fields, "%s.%s, ", target, dbName)
+			}
+
+			if valField.CanInterface() && notDefault(typeName, valField.Interface()) {
+				fmt.Fprintf(&predicate, " AND %s.%s", target, dbName)
+				if typeName == "string" {
+					fmt.Fprintf(&predicate, " LIKE :%s", dbName)
+				} else {
+					fmt.Fprintf(&predicate, " = :%s", dbName)
+				}
+			}
 		}
 
-		if valField.CanInterface() && notDefault(typeName, valField.Interface()) && dbName != "" {
-			fmt.Fprintf(&predicate, " AND %s.%s", target, dbName)
-			if typeName == "string" {
-				fmt.Fprintf(&predicate, " LIKE :%s", dbName)
-			} else {
-				fmt.Fprintf(&predicate, " = :%s", dbName)
+		if foreignKey != "" && foreignTable != "" && localName != "" {
+			related := reflect.Indirect(valField)
+			if related.CanAddr() {
+				for j := 0; j < related.NumField(); j++ {
+					relatedValField := related.Field(j)
+					relatedTypeField := related.Type().Field(j)
+					relatedTypeName := relatedValField.Type().Name()
+					relatedDBName := relatedTypeField.Tag.Get("db")
+					
+					if relatedDBName != "" && relatedValField.CanInterface() && notDefault(relatedTypeName, relatedValField.Interface()) {
+						fmt.Fprintf(&predicate, " AND %s.%s", foreignTable, relatedDBName)
+						if relatedTypeName == "string" {
+							fmt.Fprintf(&predicate, " LIKE '%s'", relatedValField)
+						} else {
+							fmt.Fprintf(&predicate, " = %s", relatedValField)
+						}
+					}
+				}
+				fmt.Fprintf(&joins, " LEFT JOIN %s on %s.%s = %s.%s", foreignTable, foreignTable, foreignKey, target, localName)
 			}
 		}
 	}
 
-	fmt.Fprintf(&core, "%sFROM %s%s", fields.String(), target, predicate.String())
+	fmt.Fprintf(&core, "%sFROM %s%s%s", fields.String(), target, joins.String(), predicate.String())
 
 	orderBy := t.FieldByName("OrderBy")
 	orderDir := t.FieldByName("OrderDir")
@@ -140,6 +168,7 @@ func BuildReadQuery(target string, source interface{}) (string, []interface{}, e
 	}
 
 	result := strings.Replace(core.String(), ", FROM", " FROM", 1)
+	fmt.Println(result)
 	return sqlx.Named(result, source)
 }
 
@@ -179,9 +208,9 @@ func BuildUpdateQuery(target string, source interface{}, fieldMask []string) (st
 // returns `true` if not default.
 func notDefault(typeName string, fieldVal interface{}) bool {
 	switch typeName {
-	case "int32":
+	case "uint", "int", "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
 		return fieldVal.(int32) != 0
-	case "float64":
+	case "float32", "float64":
 		return fieldVal.(float64) != 0
 	case "string":
 		return fieldVal.(string) != ""
