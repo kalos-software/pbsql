@@ -335,11 +335,51 @@ type User struct {
 	// @inject_tag: db:"geolocation_lat" nullable:"y"
 	GeolocationLat float64 `protobuf:"fixed64,57,opt,name=geolocation_lat,json=geolocationLat,proto3" json:"geolocation_lat,omitempty" db:"geolocation_lat" nullable:"y"`
 	// @inject_tag: db:"geolocation_lng" nullable:"y"
-	GeolocationLng       float64  `protobuf:"fixed64,58,opt,name=geolocation_lng,json=geolocationLng,proto3" json:"geolocation_lng,omitempty" db:"geolocation_lng" nullable:"y"`
-	FieldMask            []string `protobuf:"bytes,59,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
-	PageNumber           int32    `protobuf:"varint,60,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
-	OrderBy              string   `protobuf:"bytes,61,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
-	OrderDir             string   `protobuf:"bytes,62,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
+	GeolocationLng float64 `protobuf:"fixed64,58,opt,name=geolocation_lng,json=geolocationLng,proto3" json:"geolocation_lng,omitempty" db:"geolocation_lng" nullable:"y"`
+	// @inject_tag: foreign_key:"technician_user_id" foreign_table:"services_rendered" local_name:"user_id"
+	ServicesRendered     *ServicesRendered `protobuf:"bytes,63,opt,name=services_rendered,json=servicesRendered,proto3" json:"services_rendered,omitempty" foreign_key:"technician_user_id" foreign_table:"services_rendered" local_name:"user_id"`
+	FieldMask            []string                            `protobuf:"bytes,59,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
+	PageNumber           int32                               `protobuf:"varint,60,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
+	OrderBy              string                              `protobuf:"bytes,61,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
+	OrderDir             string                              `protobuf:"bytes,62,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                            `json:"-"`
+	XXX_unrecognized     []byte                              `json:"-"`
+	XXX_sizecache        int32                               `json:"-"`
+}
+
+type ServicesRendered struct {
+	// @inject_tag: db:"sr_id" primary_key:"y"
+	Id int32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty" db:"sr_id" primary_key:"y"`
+	// @inject_tag: db:"event_id" nullable:"y"
+	EventId int32 `protobuf:"varint,2,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty" db:"event_id" nullable:"y"`
+	// @inject_tag: db:"technician_user_id" nullable:"y"
+	TechnicianUserId int32 `protobuf:"varint,3,opt,name=technician_user_id,json=technicianUserId,proto3" json:"technician_user_id,omitempty" db:"technician_user_id" nullable:"y"`
+	// @inject_tag: db:"sr_name"
+	Name string `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty" db:"sr_name"`
+	// @inject_tag: db:"sr_materialsUsed" nullable:"y"
+	MaterialsUsed string `protobuf:"bytes,5,opt,name=materials_used,json=materialsUsed,proto3" json:"materials_used,omitempty" db:"sr_materialsUsed" nullable:"y"`
+	// @inject_tag: db:"sr_serviceRendered" nullable:"y"
+	ServiceRendered string `protobuf:"bytes,6,opt,name=service_rendered,json=serviceRendered,proto3" json:"service_rendered,omitempty" db:"sr_serviceRendered" nullable:"y"`
+	// @inject_tag: db:"sr_techNotes" nullable:"y"
+	TechNotes string `protobuf:"bytes,7,opt,name=tech_notes,json=techNotes,proto3" json:"tech_notes,omitempty" db:"sr_techNotes" nullable:"y"`
+	// @inject_tag: db:"sr_status"
+	Status string `protobuf:"bytes,8,opt,name=status,proto3" json:"status,omitempty" db:"sr_status"`
+	// @inject_tag: db:"sr_datetime"
+	Datetime string `protobuf:"bytes,9,opt,name=datetime,proto3" json:"datetime,omitempty" db:"sr_datetime"`
+	// @inject_tag: db:"time_started" nullable:"y"
+	TimeStarted string `protobuf:"bytes,10,opt,name=time_started,json=timeStarted,proto3" json:"time_started,omitempty" db:"time_started" nullable:"y"`
+	// @inject_tag: db:"time_finished" nullable:"y"
+	TimeFinished string `protobuf:"bytes,11,opt,name=time_finished,json=timeFinished,proto3" json:"time_finished,omitempty" db:"time_finished" nullable:"y"`
+	// @inject_tag: db:"isactive" nullable:"y"
+	IsActive int32 `protobuf:"varint,12,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty" db:"isactive" nullable:"y"`
+	// @inject_tag: db:"hide_from_timesheet" nullable:"y"
+	HideFromTimesheet int32 `protobuf:"varint,13,opt,name=hide_from_timesheet,json=hideFromTimesheet,proto3" json:"hide_from_timesheet,omitempty" db:"hide_from_timesheet" nullable:"y"`
+	// @inject_tag: db:"signature_id" nullable:"y"
+	SignatureId int32 `protobuf:"varint,14,opt,name=signature_id,json=signatureId,proto3" json:"signature_id,omitempty" db:"signature_id" nullable:"y"`
+	// @inject_tag: db:"signatureData" nullable:"y"
+	SignatureData        string   `protobuf:"bytes,15,opt,name=signature_data,json=signatureData,proto3" json:"signature_data,omitempty" db:"signatureData" nullable:"y"`
+	FieldMask            []string `protobuf:"bytes,16,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
+	PageNumber           int32    `protobuf:"varint,17,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`

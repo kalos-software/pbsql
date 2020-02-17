@@ -1,6 +1,7 @@
 package pbsql
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
@@ -29,6 +30,7 @@ var expectedDeleteQry = "UPDATE test_table SET test_table.is_active = ? WHERE te
 
 var testEvent Event
 
+var testUser User
 func TestMain(m *testing.M) {
 	target.ID = 1
 	target.Date = "2019-01-01"
@@ -62,6 +64,14 @@ func TestBuildRead(t *testing.T) {
 		t.Log("Got:", qry)
 		t.Fatal("Expected:", expectedReadQry)
 	}*/
+}
+
+func TestBuildRelatedReadQuery(t *testing.T) {
+	testUser.Id = 8418
+	testUser.ServicesRendered = &ServicesRendered{}
+	//_ := BuildRelatedReadQuery(&testEvent, Relationship{ ForeignKey: "property_id", ForeignValue: testEvent.PropertyId})
+	qry2 := BuildRelatedReadQuery(&testUser,  "technician_user_id", testUser.Id)
+	fmt.Println(qry2)
 }
 
 func TestBuildUpdate(t *testing.T) {

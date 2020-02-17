@@ -203,6 +203,56 @@ func BuildUpdateQuery(target string, source interface{}, fieldMask []string) (st
 	return sqlx.Named(result, source)
 }
 
+func BuildRelatedReadQuery(source interface{}, foreign_key string, foreign_value interface{}) string {
+	var tmpCore strings.Builder
+	var tmpFields strings.Builder
+
+	nullHandler := "ifnull("
+	if sqlDriver := os.Getenv("GRPC_SQL_DRIVER"); sqlDriver == "pgsql" {
+		nullHandler = "coalesce("
+	}
+
+	t := reflect.ValueOf(source).Elem()
+
+	for i := 0; i < t.NumField(); i++ {
+		typeField := t.Type().Field(i)
+		valField := t.Field(i)
+		foreignKey := typeField.Tag.Get("foreign_key")
+		foreignTable := typeField.Tag.Get("foreign_table")
+		localName := typeField.Tag.Get("local_name")
+
+		if foreignKey == foreign_key && foreignTable != "" && localName != "" {
+			related := reflect.Indirect(valField)
+			fmt.Fprintf(&tmpCore, "SELECT ")
+			if related.CanAddr() {
+				for j := 0; j < related.NumField(); j++ {
+					relatedValField := related.Field(j)
+					relatedTypeField := related.Type().Field(j)
+					relatedTypeName := relatedValField.Type().Name()
+					relatedDBName := relatedTypeField.Tag.Get("db")
+					relatedNullable := relatedTypeField.Tag.Get("nullable")
+					if relatedDBName != "" && relatedValField.CanInterface() {
+						if relatedNullable != "" {
+							fmt.Fprintf(&tmpFields, "%s%s.%s, %s) as %s, ", nullHandler, foreignTable, relatedDBName, getDefault(relatedTypeName), relatedDBName)
+						} else {
+							fmt.Fprintf(&tmpFields, "%s.%s, ", foreignTable, relatedDBName)
+						}
+					}
+				}
+				fmt.Fprintf(&tmpCore, "%sFROM %s where %s.%s = %v", tmpFields.String(), foreignTable, foreignTable, foreignKey, foreign_value)
+			}
+		}
+	}
+	
+	return strings.Replace(tmpCore.String(), ", FROM", " FROM", 1)
+}
+
+// Relationship helps pbsql determine 
+type Relationship struct {
+	ForeignKey string
+	ForeignValue interface{}
+}
+
 // `notDefault` checks if a value is set to it's unitialized default, e.g. whether or not an `int32` value is `0`
 // returns `true` if not default.
 func notDefault(typeName string, fieldVal interface{}) bool {
