@@ -108,9 +108,6 @@ func BuildReadQuery(target string, source interface{}) (string, []interface{}, e
 		typeName := valField.Type().Name()
 		dbName := typeField.Tag.Get("db")
 		nullable := typeField.Tag.Get("nullable")
-		foreignKey := typeField.Tag.Get("foreign_key")
-		foreignTable := typeField.Tag.Get("foreign_table")
-		localName := typeField.Tag.Get("local_name")
 
 		if dbName != "" {
 			if nullable != "" {
@@ -128,44 +125,12 @@ func BuildReadQuery(target string, source interface{}) (string, []interface{}, e
 				}
 			}
 		}
-
-		if foreignKey != "" && foreignTable != "" && localName != "" {
-			related := reflect.Indirect(valField)
-			if related.CanAddr() {
-				for j := 0; j < related.NumField(); j++ {
-					relatedValField := related.Field(j)
-					relatedTypeField := related.Type().Field(j)
-					relatedTypeName := relatedValField.Type().Name()
-					relatedDBName := relatedTypeField.Tag.Get("db")
-					
-					if relatedDBName != "" && relatedValField.CanInterface() && notDefault(relatedTypeName, relatedValField.Interface()) {
-						fmt.Fprintf(&predicate, " AND %s.%s", foreignTable, relatedDBName)
-						if relatedTypeName == "string" {
-							fmt.Fprintf(&predicate, " LIKE '%s'", relatedValField)
-						} else {
-							fmt.Fprintf(&predicate, " = %s", relatedValField)
-						}
-					}
-				}
-				fmt.Fprintf(&joins, " LEFT JOIN %s on %s.%s = %s.%s", foreignTable, foreignTable, foreignKey, target, localName)
-			}
-		}
+		handleForeignKeys(valField, target, typeField, &predicate, &joins)
 	}
 
+	addDateRange(target, t, &predicate)
 	fmt.Fprintf(&core, "%sFROM %s%s%s", fields.String(), target, joins.String(), predicate.String())
-
-	orderBy := t.FieldByName("OrderBy")
-	orderDir := t.FieldByName("OrderDir")
-	
-	if orderBy.CanAddr() && orderBy.String() != "" {
-		orderStr := fmt.Sprintf(" order by %s", orderBy.String())
-		if orderDir.CanAddr() && orderDir.String() != "" {
-			orderStr = fmt.Sprintf("%s %s", orderStr, orderDir.String())
-		} else {
-			orderStr = fmt.Sprintf("%s asc", orderStr)
-		}
-		fmt.Fprint(&core, orderStr)
-	}
+	addOrder(t, &core)
 
 	result := strings.Replace(core.String(), ", FROM", " FROM", 1)
 	return sqlx.Named(result, source)

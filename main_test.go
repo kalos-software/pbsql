@@ -53,13 +53,13 @@ func TestBuildCreate(t *testing.T) {
 }
 
 func TestBuildRead(t *testing.T) {
-	testEvent.Customer = &User{Businessname: "%Pool%"}
-	_, _, err := BuildReadQuery("event", &testEvent)
+	testEvent.DateRange = []string{">", "2020-01-02", "<" , "2020-01-04"}
+	qry, args, err := BuildReadQuery("event", &testEvent)
 	if err != nil {
 		t.Fatal("BuildReadQuery failed", err)
 	}
-	//fmt.Printf("%#v", args)
-	//t.Log(qry, args)
+	fmt.Printf("%#v", args)
+	t.Log(qry, args)
 	/*if qry != expectedReadQry {
 		t.Log("Got:", qry)
 		t.Fatal("Expected:", expectedReadQry)
@@ -70,7 +70,7 @@ func TestBuildRelatedReadQuery(t *testing.T) {
 	testUser.Id = 8418
 	testUser.ServicesRendered = &ServicesRendered{}
 	//_ := BuildRelatedReadQuery(&testEvent, Relationship{ ForeignKey: "property_id", ForeignValue: testEvent.PropertyId})
-	qry2 := BuildRelatedReadQuery(&testUser,  "technician_user_id", testUser.Id)
+	qry2 := BuildRelatedReadQuery(&testUser, "technician_user_id", testUser.Id)
 	fmt.Println(qry2)
 }
 
