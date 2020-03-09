@@ -1,4 +1,10 @@
-package main
+package pbsql
+
+import (
+	"fmt"
+	"reflect"
+	"strings"
+)
 
 func addOrder(t reflect.Value, core *strings.Builder) {
 	orderBy := t.FieldByName("OrderBy")
