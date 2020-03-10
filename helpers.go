@@ -26,7 +26,7 @@ func handleForeignKeys(t reflect.Value, target string, typeField reflect.StructF
 	foreignTable := typeField.Tag.Get("foreign_table")
 	localName := typeField.Tag.Get("local_name")
 	related := reflect.Indirect(t)
-	if related.CanAddr() {
+	if related.CanAddr() && foreignKey != "" && foreignTable != "" && localName != "" {
 		for j := 0; j < related.NumField(); j++ {
 			relatedValField := related.Field(j)
 			relatedTypeField := related.Type().Field(j)
