@@ -108,8 +108,9 @@ func BuildReadQuery(target string, source interface{}) (string, []interface{}, e
 		typeName := valField.Type().Name()
 		dbName := typeField.Tag.Get("db")
 		nullable := typeField.Tag.Get("nullable")
+		ignore := typeField.Tag.Get("ignore")
 
-		if dbName != "" {
+		if dbName != "" && ignore != "y" {
 			if nullable != "" {
 				fmt.Fprintf(&fields, "%s%s.%s, %s) as %s, ", nullHandler, target, dbName, getDefault(typeName), dbName)
 			} else {
