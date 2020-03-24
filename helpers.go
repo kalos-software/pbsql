@@ -21,19 +21,32 @@ func addOrder(t reflect.Value, core *strings.Builder) {
 	}
 }
 
-func handleForeignKeys(t reflect.Value, target string, typeField reflect.StructField, predicate *strings.Builder, joins *strings.Builder) {
+func handleForeignKeys(
+	t reflect.Value,
+	target string,
+	typeField reflect.StructField,
+	predicate *strings.Builder,
+	joins *strings.Builder,
+	) {
 	foreignKey := typeField.Tag.Get("foreign_key")
 	foreignTable := typeField.Tag.Get("foreign_table")
 	localName := typeField.Tag.Get("local_name")
+
+	if localName == "" {
+		localName = foreignKey
+	}
+
 	related := reflect.Indirect(t)
-	if related.CanAddr() && foreignKey != "" && foreignTable != "" && localName != "" {
+	if related.CanAddr() && foreignKey != "" && foreignTable != "" {
 		for j := 0; j < related.NumField(); j++ {
 			relatedValField := related.Field(j)
 			relatedTypeField := related.Type().Field(j)
 			relatedTypeName := relatedValField.Type().Name()
 			relatedDBName := relatedTypeField.Tag.Get("db")
 			
-			if relatedDBName != "" && relatedValField.CanInterface() && notDefault(relatedTypeName, relatedValField.Interface()) {
+			if relatedDBName != "" &&
+				relatedValField.CanInterface() && 
+				notDefault(relatedTypeName, relatedValField.Interface()) {
 				fmt.Fprintf(predicate, " AND %s.%s", foreignTable, relatedDBName)
 				if relatedTypeName == "string" {
 					fmt.Fprintf(predicate, " LIKE '%s'", relatedValField)
@@ -42,7 +55,15 @@ func handleForeignKeys(t reflect.Value, target string, typeField reflect.StructF
 				}
 			}
 		}
-		fmt.Fprintf(joins, " LEFT JOIN %s on %s.%s = %s.%s", foreignTable, foreignTable, foreignKey, target, localName)
+		fmt.Fprintf(
+			joins,
+			" LEFT JOIN %s on %s.%s = %s.%s",
+			foreignTable,
+			foreignTable,
+			foreignKey, 
+			target, 
+			localName,
+		)
 	}
 }
 
@@ -56,7 +77,14 @@ func addDateRange(target string, t reflect.Value, predicate *strings.Builder) {
 
 	if dateTarget != "" && dateRange.CanAddr() && reflect.TypeOf(dateRange.Interface()).Kind() == reflect.Slice {
 		for i := 0; i < dateRange.Len(); i = i + 2 {
-			fmt.Fprintf(predicate, " AND %s.%s %s '%v'", target, dateTarget, dateRange.Index(i), dateRange.Index(i + 1))
+			fmt.Fprintf(
+				predicate,
+				" AND %s.%s %s '%v'",
+				target,
+				dateTarget,
+				dateRange.Index(i),
+				dateRange.Index(i + 1),
+			)
 		}
 	}
 }

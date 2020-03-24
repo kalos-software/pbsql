@@ -199,13 +199,29 @@ func BuildRelatedReadQuery(source interface{}, foreign_key string, foreign_value
 					relatedNullable := relatedTypeField.Tag.Get("nullable")
 					if relatedDBName != "" && relatedValField.CanInterface() {
 						if relatedNullable != "" {
-							fmt.Fprintf(&tmpFields, "%s%s.%s, %s) as %s, ", nullHandler, foreignTable, relatedDBName, getDefault(relatedTypeName), relatedDBName)
+							fmt.Fprintf(
+								&tmpFields,
+								"%s%s.%s, %s) as %s, ",
+								nullHandler,
+								foreignTable,
+								relatedDBName,
+								getDefault(relatedTypeName),
+								relatedDBName,
+							)
 						} else {
 							fmt.Fprintf(&tmpFields, "%s.%s, ", foreignTable, relatedDBName)
 						}
 					}
 				}
-				fmt.Fprintf(&tmpCore, "%sFROM %s where %s.%s = %v", tmpFields.String(), foreignTable, foreignTable, foreignKey, foreign_value)
+				fmt.Fprintf(
+					&tmpCore,
+					"%sFROM %s where %s.%s = %v",
+					tmpFields.String(),
+					foreignTable,
+					foreignTable,
+					foreignKey,
+					foreign_value,
+				)
 			}
 		}
 	}
