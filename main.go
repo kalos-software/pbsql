@@ -245,7 +245,7 @@ func notDefault(typeName string, fieldVal interface{}) bool {
 		return fieldVal.(float64) != 0
 	case "string":
 		return fieldVal.(string) != ""
-	case "boolean":
+	case "bool":
 		return fieldVal.(bool)
 	default:
 		return fieldVal != nil
