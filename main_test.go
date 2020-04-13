@@ -53,9 +53,9 @@ func TestBuildCreate(t *testing.T) {
 }
 
 func TestBuildRead(t *testing.T) {
-	testEvent.DateRange = []string{">", "2020-01-02", "<" , "2020-01-04"}
-	testEvent.Customer = &User{}
-	qry, args, err := BuildReadQuery("event", &testEvent)
+	testEvent.FieldMask = []string{"IsActive"}
+	testEvent.LogJobStatus = "Completed"
+	qry, args, err := BuildReadQuery("event", &testEvent, testEvent.FieldMask...)
 	if err != nil {
 		t.Fatal("BuildReadQuery failed", err)
 	}

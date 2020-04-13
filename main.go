@@ -87,7 +87,7 @@ func BuildDeleteQuery(target string, source interface{}) (string, []interface{},
 // included in the result string.
 //
 // Returns a SQL statement as a string, a slice of args to interpolate, and an error
-func BuildReadQuery(target string, source interface{}) (string, []interface{}, error) {
+func BuildReadQuery(target string, source interface{}, fieldMask ...string) (string, []interface{}, error) {
 	nullHandler := "ifnull("
 	if sqlDriver := os.Getenv("GRPC_SQL_DRIVER"); sqlDriver == "pgsql" {
 		nullHandler = "coalesce("
@@ -117,12 +117,14 @@ func BuildReadQuery(target string, source interface{}) (string, []interface{}, e
 				fmt.Fprintf(&fields, "%s.%s, ", target, dbName)
 			}
 
-			if valField.CanInterface() && notDefault(typeName, valField.Interface()) {
-				fmt.Fprintf(&predicate, " AND %s.%s", target, dbName)
-				if typeName == "string" {
-					fmt.Fprintf(&predicate, " LIKE :%s", dbName)
-				} else {
-					fmt.Fprintf(&predicate, " = :%s", dbName)
+			if valField.CanAddr() {
+				if notDefault(typeName, valField.Interface()) || findInMask(fieldMask, typeField.Name) {
+					fmt.Fprintf(&predicate, " AND %s.%s", target, dbName)
+					if typeName == "string" {
+						fmt.Fprintf(&predicate, " LIKE :%s", dbName)
+					} else {
+						fmt.Fprintf(&predicate, " = :%s", dbName)
+					}
 				}
 			}
 		}
