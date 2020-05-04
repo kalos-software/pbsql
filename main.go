@@ -117,8 +117,15 @@ func BuildReadQuery(target string, source interface{}, fieldMask ...string) (str
 				fmt.Fprintf(&fields, "%s.%s, ", target, dbName)
 			}
 
+			if findInMask(fieldMask, typeField.Name) {
+				fmt.Println(valField.CanAddr())
+				fmt.Println(typeField.Name)
+			}
+			fmt.Println(typeField.Name)
 			if valField.CanAddr() {
 				if notDefault(typeName, valField.Interface()) || findInMask(fieldMask, typeField.Name) {
+					fmt.Println(typeField.Name)
+					fmt.Println(fieldMask)
 					fmt.Fprintf(&predicate, " AND %s.%s", target, dbName)
 					if typeName == "string" {
 						fmt.Fprintf(&predicate, " LIKE :%s", dbName)

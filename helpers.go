@@ -3,8 +3,18 @@ package pbsql
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 )
+
+var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
+var matchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
+
+func toSnakeCase(str string) string {
+  snake := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
+  snake  = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
+  return strings.ToLower(snake)
+}
 
 func addOrder(t reflect.Value, core *strings.Builder) {
 	orderBy := t.FieldByName("OrderBy")
@@ -67,21 +77,55 @@ func handleForeignKeys(
 	}
 }
 
+// addDateRange relies on the date_target proto tag to write a predicate based on
+// supplied property and date strings
+func oldddDateRange(target string, t reflect.Value, predicate *strings.Builder) {
+	dateRange := t.FieldByName("DateRange")
+	//dateTarget := t.FieldByName("DateTarget")
+	// before proceeding, we need to be extra careful and make sure that dateRange is an addressable slice
+	if  dateRange.CanAddr() && reflect.TypeOf(dateRange.Interface()).Kind() == reflect.Slice {
+		for j := 0; j < dateRange.Len(); j = j + 1 {
+			arr := dateRange.Index(j)
+			if arr.CanAddr() && reflect.TypeOf(arr.Interface()).Kind() == reflect.Slice {
+				dateTargetStr := arr.Index(0)
+				dateStrArr := arr.Index(1)
+				for i := 1; i < dateStrArr.Len(); i = i + 2 {
+					fmt.Fprintf(
+						predicate,
+						" AND %s.%s %s '%v'",
+						target,
+						toSnakeCase(dateTargetStr.String()),
+						dateStrArr.Index(i).String(),
+						dateStrArr.Index(i + 1).String(),
+					)
+				}
+			}
+		}
+	}
+}
+// a date range looks like this [string, [string, string, string?, string?]]
+// our date range list is an array of [date range]
+
 func addDateRange(target string, t reflect.Value, predicate *strings.Builder) {
-	var dateTarget string
-	dateRange := t.FieldByName("DateRange");
-	dateRangeTypeField, ok := t.Type().FieldByName("DateRange");
-	if ok {
-		dateTarget = dateRangeTypeField.Tag.Get("date_target");
+	dateRange := t.FieldByName("DateRange")
+	dateTarget := t.FieldByName("DateTarget").String()
+	fmt.Println("normal", dateTarget)
+	fmt.Println("camel", toSnakeCase(dateTarget))
+	if dateTarget == "" {
+		dateRangeTypeField, ok := t.Type().FieldByName("DateRange");
+		if ok {
+			dateTarget = dateRangeTypeField.Tag.Get("date_target");
+		}
 	}
 
-	if dateTarget != "" && dateRange.CanAddr() && reflect.TypeOf(dateRange.Interface()).Kind() == reflect.Slice {
+
+	if dateRange.CanAddr() && reflect.TypeOf(dateRange.Interface()).Kind() == reflect.Slice {
 		for i := 0; i < dateRange.Len(); i = i + 2 {
 			fmt.Fprintf(
 				predicate,
 				" AND %s.%s %s '%v'",
 				target,
-				dateTarget,
+				toSnakeCase(dateTarget),
 				dateRange.Index(i),
 				dateRange.Index(i + 1),
 			)
