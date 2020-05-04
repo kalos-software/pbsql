@@ -109,8 +109,6 @@ func oldddDateRange(target string, t reflect.Value, predicate *strings.Builder) 
 func addDateRange(target string, t reflect.Value, predicate *strings.Builder) {
 	dateRange := t.FieldByName("DateRange")
 	dateTarget := t.FieldByName("DateTarget").String()
-	fmt.Println("normal", dateTarget)
-	fmt.Println("camel", toSnakeCase(dateTarget))
 	if dateTarget == "" {
 		dateRangeTypeField, ok := t.Type().FieldByName("DateRange");
 		if ok {
