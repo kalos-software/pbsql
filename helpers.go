@@ -107,17 +107,22 @@ func oldddDateRange(target string, t reflect.Value, predicate *strings.Builder) 
 // our date range list is an array of [date range]
 
 func addDateRange(target string, t reflect.Value, predicate *strings.Builder) {
+	var dateTarget string
 	dateRange := t.FieldByName("DateRange")
-	dateTarget := t.FieldByName("DateTarget").String()
-	if dateTarget == "" {
-		dateRangeTypeField, ok := t.Type().FieldByName("DateRange");
-		if ok {
-			dateTarget = dateRangeTypeField.Tag.Get("date_target");
+	dateTargetField := t.FieldByName("DateTarget")
+	if dateTargetField.CanAddr() {
+		dateTarget = dateTargetField.String()
+		if dateTarget == "" {
+			dateRangeTypeField, ok := t.Type().FieldByName("DateRange");
+			if ok {
+				dateTarget = dateRangeTypeField.Tag.Get("date_target");
+			}
 		}
 	}
 
 
-	if dateRange.CanAddr() && reflect.TypeOf(dateRange.Interface()).Kind() == reflect.Slice {
+
+	if dateTarget != "" && dateRange.CanAddr() && reflect.TypeOf(dateRange.Interface()).Kind() == reflect.Slice {
 		for i := 0; i < dateRange.Len(); i = i + 2 {
 			fmt.Fprintf(
 				predicate,
