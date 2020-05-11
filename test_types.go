@@ -428,3 +428,81 @@ type Transaction struct {
 	DateRange []string `date_target:"timestamp"`
 	DateTarget string
 }
+
+type Task struct {
+	// @inject_tag: db:"task_id" primary_key:"y"
+	Id int32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty" db:"task_id" primary_key:"y"`
+	// @inject_tag: db:"external_id"
+	ExternalId int32 `protobuf:"varint,2,opt,name=external_id,json=externalId,proto3" json:"external_id,omitempty" db:"external_id"`
+	// @inject_tag: db:"external_code" nullable:"y"
+	ExternalCode string `protobuf:"bytes,3,opt,name=external_code,json=externalCode,proto3" json:"external_code,omitempty" db:"external_code" nullable:"y"`
+	// @inject_tag: db:"reference_number" nullable:"y"
+	ReferenceNumber string `protobuf:"bytes,4,opt,name=reference_number,json=referenceNumber,proto3" json:"reference_number,omitempty" db:"reference_number" nullable:"y"`
+	// @inject_tag: db:"creator_user_id"
+	CreatorUserId int32 `protobuf:"varint,5,opt,name=creator_user_id,json=creatorUserId,proto3" json:"creator_user_id,omitempty" db:"creator_user_id"`
+	// @inject_tag: db:"time_created"
+	TimeCreated string `protobuf:"bytes,6,opt,name=time_created,json=timeCreated,proto3" json:"time_created,omitempty" db:"time_created"`
+	// @inject_tag: db:"time_due" nullable:"y"
+	TimeDue string `protobuf:"bytes,7,opt,name=time_due,json=timeDue,proto3" json:"time_due,omitempty" db:"time_due" nullable:"y"`
+	// @inject_tag: db:"brief_description" nullable:"y"
+	BriefDescription string `protobuf:"bytes,8,opt,name=brief_description,json=briefDescription,proto3" json:"brief_description,omitempty" db:"brief_description" nullable:"y"`
+	// @inject_tag: db:"details" nullable:"y"
+	Details string `protobuf:"bytes,9,opt,name=details,proto3" json:"details,omitempty" db:"details" nullable:"y"`
+	// @inject_tag: db:"notes" nullable:"y"
+	Notes string `protobuf:"bytes,10,opt,name=notes,proto3" json:"notes,omitempty" db:"notes" nullable:"y"`
+	// @inject_tag: db:"status_id"
+	StatusId int32 `protobuf:"varint,11,opt,name=status_id,json=statusId,proto3" json:"status_id,omitempty" db:"status_id"`
+	// @inject_tag: db:"priority_id"
+	PriorityId int32 `protobuf:"varint,12,opt,name=priority_id,json=priorityId,proto3" json:"priority_id,omitempty" db:"priority_id"`
+	// @inject_tag: db:"reference_url" nullable:"y"
+	ReferenceUrl string `protobuf:"bytes,13,opt,name=reference_url,json=referenceUrl,proto3" json:"reference_url,omitempty" db:"reference_url" nullable:"y"`
+	// @inject_tag: db:"isActive" nullable:"y"
+	IsActive int32 `protobuf:"varint,14,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty" db:"isActive" nullable:"y"`
+	// @inject_tag: db:"billable"
+	Billable int32 `protobuf:"varint,15,opt,name=billable,proto3" json:"billable,omitempty" db:"billable"`
+	// @inject_tag: db:"task_billable_type" nullable:"y"
+	BillableType string `protobuf:"bytes,16,opt,name=billable_type,json=billableType,proto3" json:"billable_type,omitempty" db:"task_billable_type" nullable:"y"`
+	// @inject_tag: db:"flat_rate" nullable:"y"
+	FlatRate float64 `protobuf:"fixed64,17,opt,name=flat_rate,json=flatRate,proto3" json:"flat_rate,omitempty" db:"flat_rate" nullable:"y"`
+	// @inject_tag: db:"hourly_start" nullable:"y"
+	HourlyStart string `protobuf:"bytes,18,opt,name=hourly_start,json=hourlyStart,proto3" json:"hourly_start,omitempty" db:"hourly_start" nullable:"y"`
+	// @inject_tag: db:"hourly_end" nullable:"y"
+	HourlyEnd string `protobuf:"bytes,19,opt,name=hourly_end,json=hourlyEnd,proto3" json:"hourly_end,omitempty" db:"hourly_end" nullable:"y"`
+	// @inject_tag: db:"address" nullable:"y"
+	Address string `protobuf:"bytes,20,opt,name=address,proto3" json:"address,omitempty" db:"address" nullable:"y"`
+	// @inject_tag: db:"order_num" nullable:"y"
+	OrderNum string `protobuf:"bytes,21,opt,name=order_num,json=orderNum,proto3" json:"order_num,omitempty" db:"order_num" nullable:"y"`
+	// @inject_tag: db:"spiff_amount"
+	SpiffAmount float64 `protobuf:"fixed64,22,opt,name=spiff_amount,json=spiffAmount,proto3" json:"spiff_amount,omitempty" db:"spiff_amount"`
+	// @inject_tag: db:"spiff_jobNumber" nullable:"y"
+	SpiffJobNumber string `protobuf:"bytes,23,opt,name=spiff_job_number,json=spiffJobNumber,proto3" json:"spiff_job_number,omitempty" db:"spiff_jobNumber" nullable:"y"`
+	// @inject_tag: db:"spiff_type_id" nullable:"y"
+	SpiffTypeId int32 `protobuf:"varint,24,opt,name=spiff_type_id,json=spiffTypeId,proto3" json:"spiff_type_id,omitempty" db:"spiff_type_id" nullable:"y"`
+	// @inject_tag: db:"spiff_address" nullable:"y"
+	SpiffAddress string `protobuf:"bytes,25,opt,name=spiff_address,json=spiffAddress,proto3" json:"spiff_address,omitempty" db:"spiff_address" nullable:"y"`
+	// @inject_tag: db:"toolpurchase_date" nullable:"y"
+	ToolpurchaseDate string `protobuf:"bytes,26,opt,name=toolpurchase_date,json=toolpurchaseDate,proto3" json:"toolpurchase_date,omitempty" db:"toolpurchase_date" nullable:"y"`
+	// @inject_tag: db:"toolpurchase_cost"
+	ToolpurchaseCost float64 `protobuf:"fixed64,27,opt,name=toolpurchase_cost,json=toolpurchaseCost,proto3" json:"toolpurchase_cost,omitempty" db:"toolpurchase_cost"`
+	// @inject_tag: db:"toolpurchase_file" nullable:"y"
+	ToolpurchaseFile string `protobuf:"bytes,28,opt,name=toolpurchase_file,json=toolpurchaseFile,proto3" json:"toolpurchase_file,omitempty" db:"toolpurchase_file" nullable:"y"`
+	// @inject_tag: db:"admin_action_id" nullable:"y"
+	AdminActionId int32 `protobuf:"varint,29,opt,name=admin_action_id,json=adminActionId,proto3" json:"admin_action_id,omitempty" db:"admin_action_id" nullable:"y"`
+	// @inject_tag: db:"date_performed" nullable:"y"
+	DatePerformed string `protobuf:"bytes,30,opt,name=date_performed,json=datePerformed,proto3" json:"date_performed,omitempty" db:"date_performed" nullable:"y"`
+	// @inject_tag: db:"spiff_tool_id" nullable:"y"
+	SpiffToolId string `protobuf:"bytes,31,opt,name=spiff_tool_id,json=spiffToolId,proto3" json:"spiff_tool_id,omitempty" db:"spiff_tool_id" nullable:"y"`
+	// @inject_tag: db:"spiff_tool_closeout_date" nullable:"y"
+	SpiffToolCloseoutDate string   `protobuf:"bytes,32,opt,name=spiff_tool_closeout_date,json=spiffToolCloseoutDate,proto3" json:"spiff_tool_closeout_date,omitempty" db:"spiff_tool_closeout_date" nullable:"y"`
+	FieldMask             []string `protobuf:"bytes,33,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
+	PageNumber            int32    `protobuf:"varint,34,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
+	// @inject_tag: date_target:"date_performed"
+	DateRange            []string                                        `protobuf:"bytes,35,rep,name=date_range,json=dateRange,proto3" json:"date_range,omitempty" date_target:"date_performed"`
+	DateTarget           string                                          `protobuf:"bytes,43,opt,name=date_target,json=dateTarget,proto3" json:"date_target,omitempty"`
+	OwnerName            string                                          `protobuf:"bytes,37,opt,name=owner_name,json=ownerName,proto3" json:"owner_name,omitempty"`
+	OrderBy              string                                          `protobuf:"bytes,40,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
+	OrderDir             string                                          `protobuf:"bytes,41,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                                        `json:"-"`
+	XXX_unrecognized     []byte                                          `json:"-"`
+	XXX_sizecache        int32                                           `json:"-"`
+}

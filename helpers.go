@@ -61,7 +61,7 @@ func handleForeignKeys(
 				if relatedTypeName == "string" {
 					fmt.Fprintf(predicate, " LIKE '%s'", relatedValField)
 				} else {
-					fmt.Fprintf(predicate, " = %s", relatedValField)
+					fmt.Fprintf(predicate, " = %v", relatedValField)
 				}
 			}
 		}
@@ -135,3 +135,6 @@ func addDateRange(target string, t reflect.Value, predicate *strings.Builder) {
 		}
 	}
 }
+
+// get all string properties, created nested OR for query constraint that uses like "%%" syntax, write to query
+func handleStringSearch() {}

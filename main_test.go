@@ -34,6 +34,8 @@ var testUser User
 
 var testTxn Transaction
 
+var testTask Task
+
 func TestMain(m *testing.M) {
 	target.ID = 1
 	target.Date = "2019-01-01"
@@ -56,8 +58,13 @@ func TestBuildCreate(t *testing.T) {
 }
 
 func TestBuildRead(t *testing.T) {
-	testTxn.DateRange = []string{">", "2019-01-01", "<", "2020-01-01"}
-	qry, args, err := BuildReadQuery("transaction", &testTxn)
+	testTask.OrderBy = "date_performed"
+	testTask.OrderDir = "ASC"
+	testTask.IsActive = 1
+	testTask.ExternalId = 101253
+	testTask.BillableType = "Spiff"
+	testTask.DatePerformed = "2020-05-%"
+	qry, args, err := BuildReadQuery("task", &testTask)
 	if err != nil {
 		t.Fatal("BuildReadQuery failed", err)
 	}
