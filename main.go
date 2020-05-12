@@ -2,7 +2,6 @@ package pbsql
 
 import (
 	"fmt"
-	"os"
 	"reflect"
 	"strings"
 
@@ -20,30 +19,25 @@ func BuildCountQuery(selectQry string) string {
 // included in the result string.
 func BuildCreateQuery(target string, source interface{}) (string, []interface{}, error) {
 	t := reflect.ValueOf(source).Elem()
-	var cols strings.Builder
-	var vals strings.Builder
-	fmt.Fprintf(&cols, "INSERT INTO %s (", target)
-	vals.WriteString("(")
+	var qb queryBuilder
+	fmt.Fprintf(&qb.Columns, "INSERT INTO %s (", target)
+	qb.Values.WriteString("(")
 
 	for i := 0; i < t.NumField(); i++ {
-		valField := t.Field(i)
-		typeField := t.Type().Field(i)
-		typeName := valField.Type().Name()
-		isPrimaryKey := typeField.Tag.Get("primary_key") != ""
-		tag := typeField.Tag.Get("db")
+		field := parseReflection(t, i, target)
 
-		if notDefault(typeName, valField.Interface()) && tag != "" && !isPrimaryKey {
+		if notDefault(field.typeStr, field.value.Interface()) && field.name != "" && !field.isPrimaryKey {
 			if i != 0 {
-				cols.WriteString(", ")
-				vals.WriteString(", ")
+				qb.Columns.WriteString(", ")
+				qb.Values.WriteString(", ")
 			}
-			fmt.Fprintf(&cols, "%s.%s", target, tag)
-			fmt.Fprintf(&vals, ":%s", tag)
+			fmt.Fprintf(&qb.Columns, "%s.%s", target, field.name)
+			fmt.Fprintf(&qb.Values, ":%s", field.name)
 		}
 	}
-	vals.WriteString(")")
-	fmt.Fprintf(&cols, ") VALUES %s", vals.String())
-	result := strings.ReplaceAll(cols.String(), "(, ", "(")
+	qb.Values.WriteString(")")
+	fmt.Fprintf(&qb.Columns, ") VALUES %s", qb.Values.String())
+	result := strings.ReplaceAll(qb.Columns.String(), "(, ", "(")
 	return sqlx.Named(result, source)
 }
 
@@ -57,24 +51,19 @@ func BuildCreateQuery(target string, source interface{}) (string, []interface{},
 // If an IsActive field is detected (is_active), this func returns an update statement that sets is_active to 0,
 // otherwise it returns a delete statement
 func BuildDeleteQuery(target string, source interface{}) (string, []interface{}, error) {
-	v := reflect.ValueOf(source).Elem()
-	t := v.Type()
+	reflectedValue := reflect.ValueOf(source).Elem()
 	var builder strings.Builder
 
-	isActive, hasIsActive := t.FieldByName("IsActive")
-	if hasIsActive {
-		dbName := isActive.Tag.Get("db")
-		fmt.Fprintf(&builder, "UPDATE %s SET %s.%s = :%s WHERE ", target, target, dbName, dbName)
+	if _, hasIsActive := reflectedValue.Type().FieldByName("IsActive"); hasIsActive {
+		fmt.Fprintf(&builder, "UPDATE %s SET %s.is_active = :is_active WHERE ", target, target)
 	} else {
 		fmt.Fprintf(&builder, "DELETE FROM %s WHERE ", target)
 	}
 
-	for i := 0; i < v.NumField(); i++ {
-		typeField := t.Field(i)
-		isPkey := typeField.Tag.Get("primary_key") != ""
-		if isPkey {
-			dbName := typeField.Tag.Get("db")
-			fmt.Fprintf(&builder, "%s.%s = :%s", target, dbName, dbName)
+	for i := 0; i < reflectedValue.NumField(); i++ {
+		field := parseReflection(reflectedValue, i, target)
+		if field.isPrimaryKey {
+			fmt.Fprintf(&builder, "%s.%s = :%s", target, field.name, field.name)
 			break
 		}
 	}
@@ -82,60 +71,73 @@ func BuildDeleteQuery(target string, source interface{}) (string, []interface{},
 	return sqlx.Named(builder.String(), source)
 }
 
+
+func BuildSearchQuery(target string, source interface{}) (string, []interface{}, error) {
+	var qb queryBuilder
+	qb.Core.WriteString("SELECT ")
+	qb.Predicate.WriteString(" WHERE true")
+	reflectedValue := reflect.ValueOf(source).Elem()
+	fieldMask := make([]string, 0)
+	fields := make([]*field, 0)
+	n := reflectedValue.NumField()
+
+	for i := 0; i < n; i++ {
+		field := parseReflection(reflectedValue, i, target)
+		fields = append(fields, field)
+		if field.name != "" && !field.shouldIgnore {
+			if field.typeStr == "string" {
+				fieldMask = append(fieldMask, field.self.Name)
+			} else if field.value.CanAddr() {
+				qb.writeAndPredicate(field, []string{})
+			}
+		}
+	}
+
+	qb.Predicate.WriteString(" AND (")
+	for i := 0; i < n; i++ {
+		field := fields[i]
+		if field.name != "" && !field.shouldIgnore {
+			qb.writeSelectField(field)
+			if field.value.CanAddr() {
+				if field.typeStr == "string" {
+					qb.writeOrPredicate(field, fieldMask)
+				}
+			}
+		}
+		if field.hasForeignKey {
+			qb.handleForeignKey(field)
+		}
+	}
+	qb.Predicate.WriteString(")") 
+	return sqlx.Named(qb.getReadResult(target, &reflectedValue), source)
+}
+
+
 // BuildReadQuery accepts a target table name and a protobuf message and attempts to build a valid SQL select statement,
 // ignoring any struct fields with default values when writing predicates. Fields must be tagged with `db:""` in order to be
 // included in the result string.
 //
 // Returns a SQL statement as a string, a slice of args to interpolate, and an error
 func BuildReadQuery(target string, source interface{}, fieldMask ...string) (string, []interface{}, error) {
-	nullHandler := "ifnull("
-	if sqlDriver := os.Getenv("GRPC_SQL_DRIVER"); sqlDriver == "pgsql" {
-		nullHandler = "coalesce("
-	}
+	reflectedValue := reflect.ValueOf(source).Elem()
+	var qb queryBuilder
+	qb.Core.WriteString("SELECT ")
+	qb.Predicate.WriteString(" WHERE true")
 
-	t := reflect.ValueOf(source).Elem()
-
-	var core strings.Builder
-	var joins strings.Builder
-	var fields strings.Builder
-	var predicate strings.Builder
-	core.WriteString("SELECT ")
-	predicate.WriteString(" WHERE true")
-
-	for i := 0; i < t.NumField(); i++ {
-		valField := t.Field(i)
-		typeField := t.Type().Field(i)
-		typeName := valField.Type().Name()
-		dbName := typeField.Tag.Get("db")
-		nullable := typeField.Tag.Get("nullable")
-		ignore := typeField.Tag.Get("ignore")
-
-		if dbName != "" && ignore != "y" {
-			if nullable != "" {
-				fmt.Fprintf(&fields, "%s%s.%s, %s) as %s, ", nullHandler, target, dbName, getDefault(typeName), dbName)
-			} else {
-				fmt.Fprintf(&fields, "%s.%s, ", target, dbName)
-			}
-
-			if valField.CanAddr() {
-				if notDefault(typeName, valField.Interface()) || findInMask(fieldMask, typeField.Name) {
-					fmt.Fprintf(&predicate, " AND %s.%s", target, dbName)
-					if typeName == "string" {
-						fmt.Fprintf(&predicate, " LIKE :%s", dbName)
-					} else {
-						fmt.Fprintf(&predicate, " = :%s", dbName)
-					}
-				}
+	for i := 0; i < reflectedValue.NumField(); i++ {
+		field := parseReflection(reflectedValue, i, target)
+		if field.name != "" && !field.shouldIgnore {
+			qb.writeSelectField(field)
+			if field.value.CanAddr() {
+				qb.writeAndPredicate(field, fieldMask)
 			}
 		}
-		handleForeignKeys(valField, target, typeField, &predicate, &joins)
+		if field.hasForeignKey {
+			qb.handleForeignKey(field)
+		}
 	}
 
-	addDateRange(target, t, &predicate)
-	fmt.Fprintf(&core, "%sFROM %s%s%s", fields.String(), target, joins.String(), predicate.String())
-	addOrder(t, &core)
-
-	result := strings.Replace(core.String(), ", FROM", " FROM", 1)
+	result := qb.getReadResult(target, &reflectedValue)
 	return sqlx.Named(result, source)
 }
 
@@ -144,137 +146,59 @@ func BuildReadQuery(target string, source interface{}, fieldMask ...string) (str
 // in `fieldMask`. Struct fields must also be tagged with `db:""`, and the primary key should be tagged as
 // `primary_key` otherwise this function will return an invalid query
 func BuildUpdateQuery(target string, source interface{}, fieldMask []string) (string, []interface{}, error) {
-	v := reflect.ValueOf(source).Elem()
-	t := v.Type()
+	reflectedValue := reflect.ValueOf(source).Elem()
+	var qb queryBuilder
+	fmt.Fprintf(&qb.Core, "UPDATE %s SET ", target)
 
-	var builder strings.Builder
-	fmt.Fprintf(&builder, "UPDATE %s SET ", target)
+	for i := 0; i < reflectedValue.NumField(); i++ {
+		field := parseReflection(reflectedValue, i, target)
 
-	var predicate strings.Builder
-	for i := 0; i < v.NumField(); i++ {
-		valField := v.Field(i)
-		typeField := t.Field(i)
-		dbName := typeField.Tag.Get("db")
-
-		if valField.CanInterface() && dbName != "" {
-			isPrimaryKey := typeField.Tag.Get("primary_key") != ""
-			if isPrimaryKey {
-				fmt.Fprintf(&predicate, "WHERE %s.%s = :%s", target, dbName, dbName)
-			} else if findInMask(fieldMask, typeField.Name) {
-				fmt.Fprintf(&builder, "%s.%s = :%s, ", target, dbName, dbName)
+		if field.value.CanInterface() && field.name != "" {
+			if field.isPrimaryKey {
+				fmt.Fprintf(&qb.Predicate, "WHERE %s.%s = :%s", target, field.name, field.name)
+			} else if findInMask(fieldMask, field.self.Name) {
+				fmt.Fprintf(&qb.Core, "%s.%s = :%s, ", target, field.name, field.name)
 			}
 		}
 	}
 
-	builder.WriteString(predicate.String())
-	result := strings.Replace(builder.String(), ", WHERE", " WHERE", 1)
-	return sqlx.Named(result, source)
+	return sqlx.Named(qb.getUpdateResult(), source)
 }
 
-func BuildRelatedReadQuery(source interface{}, foreign_key string, foreign_value interface{}) string {
-	var tmpCore strings.Builder
-	var tmpFields strings.Builder
+// BuildRelatedReadQuery can be used to quickly build queries for many to one relationships
+// This method is still experimental
+func BuildRelatedReadQuery(source interface{}, foreignKey string, foreignValue interface{}) string {
+	var qb queryBuilder
+	reflectedValue := reflect.ValueOf(source).Elem()
 
-	nullHandler := "ifnull("
-	if sqlDriver := os.Getenv("GRPC_SQL_DRIVER"); sqlDriver == "pgsql" {
-		nullHandler = "coalesce("
-	}
+	for i := 0; i < reflectedValue.NumField(); i++ {
+		field := parseReflection(reflectedValue, i, "")
+		foreignKeyTag := field.self.Tag.Get("foreign_key")
+		foreignTable := field.self.Tag.Get("foreign_table")
+		localName := field.self.Tag.Get("local_name")
 
-	t := reflect.ValueOf(source).Elem()
-
-	for i := 0; i < t.NumField(); i++ {
-		typeField := t.Type().Field(i)
-		valField := t.Field(i)
-		foreignKey := typeField.Tag.Get("foreign_key")
-		foreignTable := typeField.Tag.Get("foreign_table")
-		localName := typeField.Tag.Get("local_name")
-
-		if foreignKey == foreign_key && foreignTable != "" && localName != "" {
-			related := reflect.Indirect(valField)
-			fmt.Fprintf(&tmpCore, "SELECT ")
+		if foreignKeyTag == foreignKey && foreignTable != "" && localName != "" {
+			related := reflect.Indirect(field.value)
+			fmt.Fprintf(&qb.Core, "SELECT ")
 			if related.CanAddr() {
 				for j := 0; j < related.NumField(); j++ {
-					relatedValField := related.Field(j)
-					relatedTypeField := related.Type().Field(j)
-					relatedTypeName := relatedValField.Type().Name()
-					relatedDBName := relatedTypeField.Tag.Get("db")
-					relatedNullable := relatedTypeField.Tag.Get("nullable")
-					if relatedDBName != "" && relatedValField.CanInterface() {
-						if relatedNullable != "" {
-							fmt.Fprintf(
-								&tmpFields,
-								"%s%s.%s, %s) as %s, ",
-								nullHandler,
-								foreignTable,
-								relatedDBName,
-								getDefault(relatedTypeName),
-								relatedDBName,
-							)
-						} else {
-							fmt.Fprintf(&tmpFields, "%s.%s, ", foreignTable, relatedDBName)
-						}
+					f := parseReflection(related, j, foreignTable)
+					if f.name != "" && f.value.CanInterface() {
+						qb.writeSelectField(f)
 					}
 				}
 				fmt.Fprintf(
-					&tmpCore,
+					&qb.Core,
 					"%sFROM %s where %s.%s = %v",
-					tmpFields.String(),
+					qb.Fields.String(),
 					foreignTable,
 					foreignTable,
 					foreignKey,
-					foreign_value,
+					foreignValue,
 				)
 			}
 		}
 	}
 	
-	return strings.Replace(tmpCore.String(), ", FROM", " FROM", 1)
-}
-
-// Relationship helps pbsql determine 
-type Relationship struct {
-	ForeignKey string
-	ForeignValue interface{}
-}
-
-// `notDefault` checks if a value is set to it's unitialized default, e.g. whether or not an `int32` value is `0`
-// returns `true` if not default.
-func notDefault(typeName string, fieldVal interface{}) bool {
-	switch typeName {
-	case "uint", "int", "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
-		return fieldVal.(int32) != 0
-	case "float32", "float64":
-		return fieldVal.(float64) != 0
-	case "string":
-		return fieldVal.(string) != ""
-	case "bool":
-		return fieldVal.(bool)
-	default:
-		return fieldVal != nil
-	}
-}
-
-// `getDefault` returns the unitialized value of a type for sql ifnull statements
-func getDefault(typeName string) string {
-	switch typeName {
-	case "byte", "rune", "uint", "int", "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
-		return "0"
-	case "float32", "float64":
-		return "0.0"
-	case "bool":
-		return "0"
-	case "string":
-		return "''"
-	default:
-		panic(fmt.Errorf("couldn't determine default value for provided type %s", typeName))
-	}
-}
-
-func findInMask(fieldMask []string, field string) bool {
-	for _, v := range fieldMask {
-		if v == field {
-			return true
-		}
-	}
-	return false
+	return strings.Replace(qb.Core.String(), ", FROM", " FROM", 1)
 }

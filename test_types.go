@@ -428,7 +428,6 @@ type Transaction struct {
 	DateRange []string `date_target:"timestamp"`
 	DateTarget string
 }
-
 type Task struct {
 	// @inject_tag: db:"task_id" primary_key:"y"
 	Id int32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty" db:"task_id" primary_key:"y"`
@@ -499,10 +498,10 @@ type Task struct {
 	// @inject_tag: date_target:"date_performed"
 	DateRange            []string                                        `protobuf:"bytes,35,rep,name=date_range,json=dateRange,proto3" json:"date_range,omitempty" date_target:"date_performed"`
 	DateTarget           string                                          `protobuf:"bytes,43,opt,name=date_target,json=dateTarget,proto3" json:"date_target,omitempty"`
-	OwnerName            string                                          `protobuf:"bytes,37,opt,name=owner_name,json=ownerName,proto3" json:"owner_name,omitempty"`
-	OrderBy              string                                          `protobuf:"bytes,40,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
+		OwnerName            string                                          `protobuf:"bytes,37,opt,name=owner_name,json=ownerName,proto3" json:"owner_name,omitempty"`
+		OrderBy              string                                          `protobuf:"bytes,40,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
 	OrderDir             string                                          `protobuf:"bytes,41,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                                        `json:"-"`
+		XXX_NoUnkeyedLiteral struct{}                                        `json:"-"`
 	XXX_unrecognized     []byte                                          `json:"-"`
 	XXX_sizecache        int32                                           `json:"-"`
 }

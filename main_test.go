@@ -66,7 +66,7 @@ func TestBuildRead(t *testing.T) {
 	testTask.DatePerformed = "2020-05-%"
 	qry, args, err := BuildReadQuery("task", &testTask)
 	if err != nil {
-		t.Fatal("BuildReadQuery failed", err)
+		t.Fatal(err.Error())
 	}
 	fmt.Printf("%#v", args)
 	t.Log(qry, args)
@@ -74,6 +74,19 @@ func TestBuildRead(t *testing.T) {
 		t.Log("Got:", qry)
 		t.Fatal("Expected:", expectedReadQry)
 	}*/
+}
+
+func TestBuildSearch(t *testing.T) {
+	testTask.IsActive = 1
+	testTask.ExternalId = 101253
+	//testTask.OrderBy = "date_performed"
+	//testTask.OrderDir = "ASC"
+	qry, args, err := BuildSearchQuery("task", &testTask)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	fmt.Printf("%#v", args)
+	t.Log(qry, args)
 }
 
 func TestBuildRelatedReadQuery(t *testing.T) {
