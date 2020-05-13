@@ -85,7 +85,7 @@ func (qb *queryBuilder) getReadResult(table string, v *reflect.Value) string {
 	qb.handleDateRange(table, v)
 	fmt.Fprintf(&qb.Core, queryCore, qb.Fields.String(), table, qb.Joins.String(), qb.Predicate.String())
 	qb.handleOrder(v)
-	return strings.Replace(qb.Core.String(), ", FROM", " FROM", 1)
+	return strings.Replace(strings.Replace(qb.Core.String(), ", FROM", " FROM", 1), "( OR", "(", 1)
 }
 
 func (qb *queryBuilder) getUpdateResult() string {

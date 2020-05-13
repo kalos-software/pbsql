@@ -72,6 +72,7 @@ func BuildDeleteQuery(target string, source interface{}) (string, []interface{},
 }
 
 
+// BuildSearchQuery builds a search query
 func BuildSearchQuery(target string, source interface{}) (string, []interface{}, error) {
 	var qb queryBuilder
 	qb.Core.WriteString("SELECT ")
