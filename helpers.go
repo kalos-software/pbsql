@@ -94,19 +94,14 @@ type queryBuilder struct {
 }
 
 func (qb *queryBuilder) writeSelectField(f *field) {
-	if f.selectFunc.ok {
-		qb.writeSelectFunc(f)
+	if f.isNullable {
+		fmt.Fprintf(&qb.Fields, nullSelectField, f.table, f.name, getDefault(f.typeStr), f.name)
 	} else {
-		if f.isNullable {
-			fmt.Fprintf(&qb.Fields, nullSelectField, f.table, f.name, getDefault(f.typeStr), f.name)
-		} else {
-			fmt.Fprintf(&qb.Fields, selectField, f.table, f.name)
-		}
+		fmt.Fprintf(&qb.Fields, selectField, f.table, f.name)
 	}
 }
 
 func (qb *queryBuilder) writeSelectFunc(f *field) {
-	fmt.Println(f)
 	fmt.Fprintf(&qb.Fields, selectFuncField, f.selectFunc.name, f.selectFunc.argName, getDefault(f.typeStr), f.name)
 }
 
