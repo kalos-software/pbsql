@@ -9,6 +9,7 @@ import (
 
 const nullSelectField = "ifnull(%s.%s, %s) as %s, "
 const selectField = "%s.%s, "
+const selectFuncField = "ifnull(%s(:%s), %s) as %s,"
 const andPredicate = " AND %s.%s"
 const orPredicate = " OR %s.%s"
 const strComparison = " LIKE :%s"
@@ -26,12 +27,29 @@ type field struct {
 	shouldIgnore bool
 	isPrimaryKey bool
 	hasForeignKey bool
+	hasSelectFunc bool
+	selectFuncName string
+	selectFunc *selectFuncData
 	name string
 }
+
+type selectFuncData struct {
+	ok bool
+	name string
+	argName string
+}
+
 
 func parseReflection(val reflect.Value, i int, target string) *field {
 	self := val.Type().Field(i)
 	value := val.Field(i)
+
+	selectFuncName := self.Tag.Get("select_func")
+	selectFunc := &selectFuncData{
+		ok: selectFuncName != "",
+		name: selectFuncName,
+		argName: self.Tag.Get("func_arg_name"),
+	}
 	return &field{
 		value: value,
 		table: target,
@@ -41,9 +59,30 @@ func parseReflection(val reflect.Value, i int, target string) *field {
 		isPrimaryKey: self.Tag.Get("primary_key") != "",
 		shouldIgnore: self.Tag.Get("ignore") != "",
 		hasForeignKey: self.Tag.Get("foreign_key") != "",
+		selectFunc: selectFunc,
 		name: self.Tag.Get("db"),
 	}
 }
+
+/** Field Tags
+* __________________
+* Standard Group    |
+* db                | corresponding database property name 
+* nullable          | y \ n if the field could be a null value
+* primary_key       | y \ n if the field is the primary key of a table
+* ignore            | y \ n if the field should be ignored (edge case)
+* date_target       | default date field to use for date range searches
+* __________________|
+* Foreign Key Group |
+* foreign_key       | corresponding database property name on the foreign entity table
+* local_name        | name of key on local table (if "", uses foreign_key)
+* foreign_table     | name of foreign table
+* __________________|
+* Function Group    |
+* select_func       | name of SQL UDF used to select data
+* func_arg_name     | name of the field which is used as an argument to the function
+* __________________|
+**/
 
 type queryBuilder struct {
 	Core strings.Builder
@@ -55,11 +94,20 @@ type queryBuilder struct {
 }
 
 func (qb *queryBuilder) writeSelectField(f *field) {
-	if f.isNullable {
-		fmt.Fprintf(&qb.Fields, nullSelectField, f.table, f.name, getDefault(f.typeStr), f.name)
+	if f.selectFunc.ok {
+		qb.writeSelectFunc(f)
 	} else {
-		fmt.Fprintf(&qb.Fields, selectField, f.table, f.name)
+		if f.isNullable {
+			fmt.Fprintf(&qb.Fields, nullSelectField, f.table, f.name, getDefault(f.typeStr), f.name)
+		} else {
+			fmt.Fprintf(&qb.Fields, selectField, f.table, f.name)
+		}
 	}
+}
+
+func (qb *queryBuilder) writeSelectFunc(f *field) {
+	fmt.Println(f)
+	fmt.Fprintf(&qb.Fields, selectFuncField, f.selectFunc.name, f.selectFunc.argName, getDefault(f.typeStr), f.name)
 }
 
 func (qb *queryBuilder) writePredicate(f *field, fieldMask []string, predicateStr string) {
@@ -175,16 +223,46 @@ func (qb *queryBuilder) handleForeignKey(f *field) {
 // returns `true` if not default.
 func notDefault(typeName string, fieldVal interface{}) bool {
 	switch typeName {
-	case "uint", "int", "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
+	case "uint":
+		return fieldVal.(uint) != 0
+	case "int":
+		return fieldVal.(int) != 0
+	case "uint8":
+		return fieldVal.(uint8) != 0
+	case "uint16":
+		return fieldVal.(uint16) != 0
+	case "uint32":
+		return fieldVal.(uint32) != 0
+	case "uint64":
+		return fieldVal.(uint64) != 0
+	case "int8":
+		return fieldVal.(int8) != 0
+	case "int16": 
+		return fieldVal.(int16) != 0
+	case "int32":
 		return fieldVal.(int32) != 0
-	case "float32", "float64":
-		return fieldVal.(float64) != 0
+	case	"int64":
+		return fieldVal.(int64) != 0
+	case "byte":
+		return fieldVal.(byte) != 0
+	case "rune":
+		return fieldVal.(rune) != 0 
+	case "uintptr":
+		return fieldVal.(uintptr) != 0
+	case "float32":
+		return fieldVal.(float32) != 0.0
+	case "float64":
+		return fieldVal.(float64) != 0.0
+	case "complex64":
+		return fieldVal.(complex64) != (0+0i)
+	case "complex128":
+		return fieldVal.(complex128) != (0+0i)
 	case "string":
 		return fieldVal.(string) != ""
 	case "bool":
 		return fieldVal.(bool)
 	default:
-		return fieldVal != nil
+		return false
 	}
 }
 

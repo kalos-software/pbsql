@@ -129,7 +129,7 @@ func BuildReadQuery(target string, source interface{}, fieldMask ...string) (str
 		field := parseReflection(reflectedValue, i, target)
 		if field.name != "" && !field.shouldIgnore {
 			qb.writeSelectField(field)
-			if field.value.CanAddr() {
+			if field.value.CanAddr() && !field.hasSelectFunc {
 				qb.writeAndPredicate(field, fieldMask)
 			}
 		}
@@ -157,7 +157,7 @@ func BuildUpdateQuery(target string, source interface{}, fieldMask []string) (st
 		if field.value.CanInterface() && field.name != "" {
 			if field.isPrimaryKey {
 				fmt.Fprintf(&qb.Predicate, "WHERE %s.%s = :%s", target, field.name, field.name)
-			} else if findInMask(fieldMask, field.self.Name) {
+			} else if findInMask(fieldMask, field.self.Name) || field.value.CanInterface() && notDefault(field.typeStr, field.value.Interface()) {
 				fmt.Fprintf(&qb.Core, "%s.%s = :%s, ", target, field.name, field.name)
 			}
 		}

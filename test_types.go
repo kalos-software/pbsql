@@ -412,11 +412,11 @@ type Transaction struct {
 	// @inject_tag: db:"status_id"
 	StatusId int32 `protobuf:"varint,12,opt,name=status_id,json=statusId,proto3" json:"status_id,omitempty" db:"status_id"`
 	// @inject_tag: db:"is_audited"
+	OwnerName string `db:"owner_name",select_func:"name_of_user",func_arg_name:"owner_id"`
 	IsAudited bool `protobuf:"varint,24,opt,name=is_audited,json=isAudited,proto3" json:"is_audited,omitempty" db:"is_audited"`
 	// @inect_tag: db:"is_recorded"
 	IsRecorded           bool                                        `protobuf:"varint,25,opt,name=is_recorded,json=isRecorded,proto3" json:"is_recorded,omitempty" db:"is_recorded"`
 	Status               string                                      `protobuf:"bytes,13,opt,name=status,proto3" json:"status,omitempty"`
-	OwnerName            string                                      `protobuf:"bytes,14,opt,name=owner_name,json=ownerName,proto3" json:"owner_name,omitempty"`
 	CardUsed             string                                      `protobuf:"bytes,15,opt,name=card_used,json=cardUsed,proto3" json:"card_used,omitempty"`
 	PageNumber           int32                                       `protobuf:"varint,18,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
 	FieldMask            []string                                    `protobuf:"bytes,19,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
@@ -492,14 +492,14 @@ type Task struct {
 	// @inject_tag: db:"spiff_tool_id" nullable:"y"
 	SpiffToolId string `protobuf:"bytes,31,opt,name=spiff_tool_id,json=spiffToolId,proto3" json:"spiff_tool_id,omitempty" db:"spiff_tool_id" nullable:"y"`
 	// @inject_tag: db:"spiff_tool_closeout_date" nullable:"y"
+	OwnerName string `db:"owner_name" select_func:"name_of_user" func_arg_name:"external_id"`
 	SpiffToolCloseoutDate string   `protobuf:"bytes,32,opt,name=spiff_tool_closeout_date,json=spiffToolCloseoutDate,proto3" json:"spiff_tool_closeout_date,omitempty" db:"spiff_tool_closeout_date" nullable:"y"`
 	FieldMask             []string `protobuf:"bytes,33,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
 	PageNumber            int32    `protobuf:"varint,34,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
 	// @inject_tag: date_target:"date_performed"
 	DateRange            []string                                        `protobuf:"bytes,35,rep,name=date_range,json=dateRange,proto3" json:"date_range,omitempty" date_target:"date_performed"`
 	DateTarget           string                                          `protobuf:"bytes,43,opt,name=date_target,json=dateTarget,proto3" json:"date_target,omitempty"`
-		OwnerName            string                                          `protobuf:"bytes,37,opt,name=owner_name,json=ownerName,proto3" json:"owner_name,omitempty"`
-		OrderBy              string                                          `protobuf:"bytes,40,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
+	OrderBy              string                                          `protobuf:"bytes,40,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
 	OrderDir             string                                          `protobuf:"bytes,41,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
 		XXX_NoUnkeyedLiteral struct{}                                        `json:"-"`
 	XXX_unrecognized     []byte                                          `json:"-"`
