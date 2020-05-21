@@ -9,7 +9,7 @@ import (
 
 const nullSelectField = "ifnull(%s.%s, %s) as %s, "
 const selectField = "%s.%s, "
-const selectFuncField = "ifnull(%s(:%s), %s) as %s,"
+const selectFuncField = "ifnull(%s(:%s), %s) as %s, "
 const andPredicate = " AND %s.%s"
 const orPredicate = " OR %s.%s"
 const strComparison = " LIKE :%s"
