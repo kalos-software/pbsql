@@ -43,6 +43,8 @@ type selectFuncData struct {
 func parseReflection(val reflect.Value, i int, target string) *field {
 	self := val.Type().Field(i)
 	value := val.Field(i)
+	name := self.Tag.Get("db")
+	foreignKey := self.Tag.Get("foreign_key")
 
 	selectFuncName := self.Tag.Get("select_func")
 	selectFunc := &selectFuncData{
@@ -58,9 +60,9 @@ func parseReflection(val reflect.Value, i int, target string) *field {
 		isNullable: self.Tag.Get("nullable") == "y",
 		isPrimaryKey: self.Tag.Get("primary_key") != "",
 		shouldIgnore: self.Tag.Get("ignore") != "",
-		hasForeignKey: self.Tag.Get("foreign_key") != "",
+		hasForeignKey: foreignKey != "",
 		selectFunc: selectFunc,
-		name: self.Tag.Get("db"),
+		name: name,
 	}
 }
 

@@ -128,12 +128,12 @@ func BuildReadQuery(target string, source interface{}, fieldMask ...string) (str
 	for i := 0; i < reflectedValue.NumField(); i++ {
 		field := parseReflection(reflectedValue, i, target)
 		if field.name != "" {
-			if !field.shouldIgnore && !field.hasSelectFunc {
+			if !field.shouldIgnore && !field.selectFunc.ok {
 				qb.writeSelectField(field)
 				if field.value.CanAddr() {
 					qb.writeAndPredicate(field, fieldMask)
 				}
-			} else if field.hasSelectFunc {
+			} else if field.selectFunc.ok {
 				qb.writeSelectFunc(field)
 			}
 		}

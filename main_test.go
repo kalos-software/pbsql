@@ -59,12 +59,8 @@ func TestBuildCreate(t *testing.T) {
 }
 
 func TestBuildRead(t *testing.T) {
-	testTask.OrderBy = "date_performed"
-	testTask.OrderDir = "ASC"
 	testTask.IsActive = 1
 	testTask.ExternalId = 101253
-	testTask.BillableType = "Spiff"
-	testTask.DatePerformed = "2020-05-%"
 	qry, args, err := BuildReadQuery("task", &testTask)
 	if err != nil {
 		t.Fatal(err.Error())
