@@ -9,7 +9,7 @@ import (
 
 const nullSelectField = "ifnull(%s.%s, %s) as %s, "
 const selectField = "%s.%s, "
-const selectFuncField = "ifnull(%s(:%s), %s) as %s, "
+const selectFuncField = "ifnull(%s(%s.%s), %s) as %s, "
 const andPredicate = " AND %s.%s"
 const orPredicate = " OR %s.%s"
 const strComparison = " LIKE :%s"
@@ -104,7 +104,7 @@ func (qb *queryBuilder) writeSelectField(f *field) {
 }
 
 func (qb *queryBuilder) writeSelectFunc(f *field) {
-	fmt.Fprintf(&qb.Fields, selectFuncField, f.selectFunc.name, f.selectFunc.argName, getDefault(f.typeStr), f.name)
+	fmt.Fprintf(&qb.Fields, selectFuncField, f.selectFunc.name, f.table, f.selectFunc.argName, getDefault(f.typeStr), f.name)
 }
 
 func (qb *queryBuilder) writePredicate(f *field, fieldMask []string, predicateStr string) {
