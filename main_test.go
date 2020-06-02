@@ -47,7 +47,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestBuildCreate(t *testing.T) {
-	qry, _, err := BuildCreateQuery("test_table", &target)
+	qry, _, err := BuildCreateQuery("task", &testTask)
 	if err != nil {
 		t.Fatal("BuildCreateQuery failed", err)
 	}
@@ -56,6 +56,13 @@ func TestBuildCreate(t *testing.T) {
 		t.Log("Got: ", qry)
 		t.Fatal("Expected:", expectedCreateQry)
 	}
+}
+
+func TestBuildCount(t *testing.T) {
+	testTask.IsActive = 1
+	testTask.ExternalId = 101253
+	qry, _, _ := BuildCountQuery("task", &testTask)
+	fmt.Println(qry)
 }
 
 func TestBuildRead(t *testing.T) {
