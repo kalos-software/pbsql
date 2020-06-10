@@ -68,6 +68,7 @@ func TestBuildCount(t *testing.T) {
 func TestBuildRead(t *testing.T) {
 	testTask.IsActive = 1
 	testTask.ExternalId = 101253
+	testTask.DateRange = []string{">", "2020-01-01", "<", "2020-01-01"}
 	qry, args, err := BuildReadQuery("task", &testTask)
 	if err != nil {
 		t.Fatal(err.Error())

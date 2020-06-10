@@ -29,6 +29,8 @@ type field struct {
 	hasForeignKey bool
 	hasSelectFunc bool
 	selectFuncName string
+	dateTarget string
+	dateRange []string
 	selectFunc *selectFuncData
 	name string
 }
@@ -41,6 +43,7 @@ type selectFuncData struct {
 
 
 func parseReflection(val reflect.Value, i int, target string) *field {
+	var dateRange []string
 	self := val.Type().Field(i)
 	value := val.Field(i)
 	name := self.Tag.Get("db")
@@ -52,6 +55,15 @@ func parseReflection(val reflect.Value, i int, target string) *field {
 		name: selectFuncName,
 		argName: self.Tag.Get("func_arg_name"),
 	}
+
+
+	dateTarget := self.Tag.Get("date_target")
+	if dateTarget != "" {
+		dateRange = value.Interface().([]string)
+	}
+	
+	
+
 	return &field{
 		value: value,
 		table: target,
@@ -62,6 +74,8 @@ func parseReflection(val reflect.Value, i int, target string) *field {
 		shouldIgnore: self.Tag.Get("ignore") != "",
 		hasForeignKey: foreignKey != "",
 		selectFunc: selectFunc,
+		dateRange: dateRange,
+		dateTarget: dateTarget,
 		name: name,
 	}
 }
