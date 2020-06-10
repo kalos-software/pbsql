@@ -381,6 +381,8 @@ type ServicesRendered struct {
 	SignatureData        string   `protobuf:"bytes,15,opt,name=signature_data,json=signatureData,proto3" json:"signature_data,omitempty" db:"signatureData" nullable:"y"`
 	FieldMask            []string `protobuf:"bytes,16,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
 	PageNumber           int32    `protobuf:"varint,17,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
+	OrderBy              string                              `protobuf:"bytes,61,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
+	OrderDir             string                              `protobuf:"bytes,62,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`

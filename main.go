@@ -143,7 +143,7 @@ func BuildReadQuery(target string, source interface{}, fieldMask ...string) (str
 	var qb queryBuilder
 	qb.Core.WriteString("SELECT ")
 	qb.Predicate.WriteString(" WHERE true")
-
+	
 	for i := 0; i < reflectedValue.NumField(); i++ {
 		field := parseReflection(reflectedValue, i, target)
 		if field.name != "" {
@@ -160,7 +160,7 @@ func BuildReadQuery(target string, source interface{}, fieldMask ...string) (str
 			qb.handleForeignKey(field)
 		}
 	}
-
+	qb.handleDateRange(target, &reflectedValue)
 	result := qb.getReadResult(target, &reflectedValue)
 	return sqlx.Named(result, source)
 }

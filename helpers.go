@@ -43,7 +43,7 @@ type selectFuncData struct {
 
 
 func parseReflection(val reflect.Value, i int, target string) *field {
-	var dateRange []string
+	//var dateRange []string
 	self := val.Type().Field(i)
 	value := val.Field(i)
 	name := self.Tag.Get("db")
@@ -59,7 +59,7 @@ func parseReflection(val reflect.Value, i int, target string) *field {
 
 	dateTarget := self.Tag.Get("date_target")
 	if dateTarget != "" {
-		dateRange = value.Interface().([]string)
+		//dateRange = value.Interface().([]string)
 	}
 	
 	
@@ -74,8 +74,8 @@ func parseReflection(val reflect.Value, i int, target string) *field {
 		shouldIgnore: self.Tag.Get("ignore") != "",
 		hasForeignKey: foreignKey != "",
 		selectFunc: selectFunc,
-		dateRange: dateRange,
-		dateTarget: dateTarget,
+		//dateRange: dateRange,
+		//dateTarget: dateTarget,
 		name: name,
 	}
 }
@@ -141,7 +141,6 @@ func (qb *queryBuilder) writeAndPredicate(f *field, fieldMask []string) {
 }
 
 func (qb *queryBuilder) getReadResult(table string, v *reflect.Value) string {
-	qb.handleDateRange(table, v)
 	fmt.Fprintf(&qb.Core, queryCore, qb.Fields.String(), table, qb.Joins.String(), qb.Predicate.String())
 	qb.handleOrder(v)
 	return strings.Replace(strings.Replace(qb.Core.String(), ", FROM", " FROM", 1), "( OR", "(", 1)
@@ -164,6 +163,35 @@ func (qb *queryBuilder) handleOrder(v *reflect.Value) {
 			orderStr = fmt.Sprintf("%s asc", orderStr)
 		}
 		fmt.Fprint(&qb.Core, orderStr)
+	} else {
+		for i := 0; i < v.NumField(); i++ {
+			field := parseReflection(*v, i, "")
+			if field.hasForeignKey {
+				foreignKey := field.self.Tag.Get("foreign_key")
+				foreignTable := field.self.Tag.Get("foreign_table")
+				localName := field.self.Tag.Get("local_name")
+			
+				if localName == "" {
+					localName = foreignKey
+				}
+			
+				related := reflect.Indirect(field.value)
+				if related.CanAddr() && foreignKey != "" && foreignTable != "" {
+					orderBy := related.FieldByName("OrderBy")
+					orderDir := related.FieldByName("OrderDir")
+					if orderBy.CanAddr() && orderBy.String() != "" && orderBy.CanInterface() {
+						orderStr := fmt.Sprintf(" order by %s.%s", foreignTable, orderBy.String())
+						if orderDir.CanAddr() && orderDir.String() != "" {
+							orderStr = fmt.Sprintf("%s %s", orderStr, orderDir.String())
+						} else {
+							orderStr = fmt.Sprintf("%s asc", orderStr)
+						}
+						fmt.Fprint(&qb.Core, orderStr)
+					}
+					return
+				}
+			}
+		}
 	}
 }
 
