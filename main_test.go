@@ -90,12 +90,10 @@ func TestBuildSearch(t *testing.T) {
 	testTask.SpiffAddress = "fart"
 	//testTask.OrderBy = "date_performed"
 	//testTask.OrderDir = "ASC"
-	qry, args, err := BuildSearchQuery("task", &testTask, "search")
+	_, _, err := BuildSearchQuery("task", &testTask, "search")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	fmt.Printf("%#v", args)
-	t.Log(qry, args)
 }
 
 func TestBuildRelatedReadQuery(t *testing.T) {

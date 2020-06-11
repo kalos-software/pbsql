@@ -84,6 +84,10 @@ func BuildSearchQuery(target string, source interface{}, searchPhrase string) (s
 
 	for i := 0; i < n; i++ {
 		field := parseReflection(reflectedValue, i, target)
+		if field.selectFunc.ok {
+			field.shouldIgnore = true
+			fmt.Println(field.selectFunc.name, field.shouldIgnore)
+		}
 		fields = append(fields, field)
 		if field.name != "" && !field.shouldIgnore {
 			if field.typeStr == "string" && field.value.String() == "" {
@@ -91,6 +95,9 @@ func BuildSearchQuery(target string, source interface{}, searchPhrase string) (s
 			} else if field.value.CanAddr() {
 				qb.writeAndPredicate(field, fieldMask)
 			}
+		} else if field.selectFunc.ok {
+			fmt.Println("writing select function field")
+			qb.writeSelectFunc(field)
 		}
 	}
 
@@ -115,7 +122,7 @@ func BuildSearchQuery(target string, source interface{}, searchPhrase string) (s
 	qry, falseArgs, err := sqlx.Named(qb.getReadResult(target, &reflectedValue), source)
 	_, altArgs, _ := BuildReadQuery(target, source)
 	searchArgs := getSearchArgs(len(falseArgs) - len(altArgs), searchPhrase)
-	fmt.Println(append(altArgs, searchArgs...))
+	fmt.Println(qry)
 	return qry, append(altArgs, searchArgs...), err
 }
 
