@@ -66,11 +66,12 @@ func TestBuildCount(t *testing.T) {
 }
 
 func TestBuildRead(t *testing.T) {
-	u := &User{ServicesRendered: &ServicesRendered{OrderBy: "cheese"}, OrderBy: "cheesewizz"}
+	//u := &User{ServicesRendered: &ServicesRendered{OrderBy: "cheese"}, OrderBy: "cheesewizz"}
 	testTask.IsActive = 1
 	testTask.ExternalId = 101253
+	testTask.DateTarget = "date_performed"
 	testTask.DateRange = []string{">", "2020-01-01", "<", "2020-01-01"}
-	qry, args, err := BuildReadQuery("task", u)
+	qry, args, err := BuildReadQuery("task", &testTask)
 	if err != nil {
 		t.Fatal(err.Error())
 	}

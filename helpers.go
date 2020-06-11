@@ -199,26 +199,46 @@ func (qb *queryBuilder) handleDateRange(target string, t *reflect.Value) {
 	var dateTarget string
 	dateRange := t.FieldByName("DateRange")
 	dateTargetField := t.FieldByName("DateTarget")
-	if dateTargetField.CanAddr() {
-		dateTarget = dateTargetField.String()
-		if dateTarget == "" {
-			dateRangeTypeField, ok := t.Type().FieldByName("DateRange");
-			if ok {
-				dateTarget = dateRangeTypeField.Tag.Get("date_target");
-			}
-		}
-	}
+	canIntefaceDateTarget := dateTargetField.CanInterface()
 
-	if dateTarget != "" && dateRange.CanAddr() && reflect.TypeOf(dateRange.Interface()).Kind() == reflect.Slice {
-		for i := 0; i < dateRange.Len(); i = i + 2 {
-			fmt.Fprintf(
-				&qb.Predicate,
-				" AND %s.%s %s '%v'",
-				target,
-				toSnakeCase(dateTarget),
-				dateRange.Index(i),
-				dateRange.Index(i + 1),
-			)
+	if canIntefaceDateTarget && dateRange.CanInterface() && dateRange.Kind() == reflect.Slice {
+		if dateTargetField.Kind() == reflect.String {
+			dateTarget = dateTargetField.String()
+			if dateTarget == "" {
+				dateRangeTypeField, ok := t.Type().FieldByName("DateRange");
+				if ok {
+					dateTarget = dateRangeTypeField.Tag.Get("date_target");
+				}
+			}
+
+			if dateTarget != "" {
+				for i := 0; i < dateRange.Len(); i = i + 2 {
+					fmt.Fprintf(
+						&qb.Predicate,
+						" AND %s.%s %s '%v'",
+						target,
+						toSnakeCase(dateTarget),
+						dateRange.Index(i),
+						dateRange.Index(i + 1),
+					)
+				}
+			}
+		} else {
+			dateTargetSlice :=  dateTargetField.Interface().([]string)
+			for i := 0; i < dateRange.Len(); i = i + 2 {
+				j := 0
+				if len(dateTargetSlice) == 2 && i != 0 {
+					j = 1
+				}
+				fmt.Fprintf(
+					&qb.Predicate,
+					" AND %s.%s %s '%v'",
+					target,
+					toSnakeCase(dateTargetSlice[j]),
+					dateRange.Index(i),
+					dateRange.Index(i + 1),
+				)
+			}
 		}
 	}
 }
