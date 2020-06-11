@@ -71,7 +71,8 @@ func TestBuildRead(t *testing.T) {
 	testTask.ExternalId = 101253
 	testTask.DateTarget = ""
 	testTask.DateRange = nil
-	qry, args, err := BuildReadQuery("task", &testTask)
+	testEvent.OrderBy = "date_started"
+	qry, args, err := BuildReadQuery("task", &testEvent)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -86,9 +87,10 @@ func TestBuildRead(t *testing.T) {
 func TestBuildSearch(t *testing.T) {
 	testTask.IsActive = 1
 	testTask.ExternalId = 101253
+	testTask.SpiffAddress = "fart"
 	//testTask.OrderBy = "date_performed"
 	//testTask.OrderDir = "ASC"
-	qry, args, err := BuildSearchQuery("task", &testTask)
+	qry, args, err := BuildSearchQuery("task", &testTask, "search")
 	if err != nil {
 		t.Fatal(err.Error())
 	}

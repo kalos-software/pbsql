@@ -359,3 +359,11 @@ func toSnakeCase(str string) string {
   snake  = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
   return strings.ToLower(snake)
 }
+
+func getSearchArgs(n int, searchPhrase string) []interface{} {
+	res := make([]interface{}, 0)
+	for i := 0; i < n; i++ {
+		res = append(res, searchPhrase)
+	}
+	return res
+}
