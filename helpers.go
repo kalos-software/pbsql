@@ -226,19 +226,21 @@ func (qb *queryBuilder) handleDateRange(target string, t *reflect.Value) {
 				}
 			} else {
 				dateTargetSlice :=  dateTargetField.Interface().([]string)
-				for i := 0; i < dateRange.Len(); i = i + 2 {
-					j := 0
-					if len(dateTargetSlice) == 2 && i != 0 {
-						j = 1
+				if len(dateTargetSlice) != 0 {
+					for i := 0; i < dateRange.Len(); i = i + 2 {
+						j := 0
+						if len(dateTargetSlice) == 2 && i != 0 {
+							j = 1
+						}
+						fmt.Fprintf(
+							&qb.Predicate,
+							" AND %s.%s %s '%v'",
+							target,
+							toSnakeCase(dateTargetSlice[j]),
+							dateRange.Index(i),
+							dateRange.Index(i + 1),
+						)
 					}
-					fmt.Fprintf(
-						&qb.Predicate,
-						" AND %s.%s %s '%v'",
-						target,
-						toSnakeCase(dateTargetSlice[j]),
-						dateRange.Index(i),
-						dateRange.Index(i + 1),
-					)
 				}
 			}
 		}
