@@ -195,17 +195,20 @@ func (qb *queryBuilder) handleOrder(v *reflect.Value) {
 	}
 }
 
+func isEmptySlice(v reflect.Value) bool {
+	return v.IsValid() && v.Kind() == reflect.Slice && v.Len() == 0
+}
+
 func (qb *queryBuilder) handleDateRange(target string, t *reflect.Value) {
 	var dateTarget string
 	dateRange := t.FieldByName("DateRange")
 	dateTargetField := t.FieldByName("DateTarget")
-	if dateRange.IsValid() && dateTargetField.IsValid() {
-		canIntefaceDateTarget := dateTargetField.CanInterface()
-
+	canIntefaceDateTarget := dateTargetField.IsValid() && dateTargetField.CanInterface()
+	if dateRange.IsValid() {
 		if canIntefaceDateTarget && dateRange.CanInterface() && dateRange.Kind() == reflect.Slice {
-			if dateTargetField.Kind() == reflect.String {
+			if isEmptySlice(dateTargetField) || dateTargetField.Kind() == reflect.String {
 				dateTarget = dateTargetField.String()
-				if dateTarget == "" {
+				if dateTarget == "" || dateTargetField.Kind() == reflect.Slice {
 					dateRangeTypeField, ok := t.Type().FieldByName("DateRange");
 					if ok {
 						dateTarget = dateRangeTypeField.Tag.Get("date_target");
