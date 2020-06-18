@@ -221,7 +221,7 @@ func (qb *queryBuilder) handleDateRange(target string, t *reflect.Value) {
 							&qb.Predicate,
 							" AND %s.%s %s '%v'",
 							target,
-							toSnakeCase(dateTarget),
+							dateTarget,
 							dateRange.Index(i),
 							dateRange.Index(i + 1),
 						)
@@ -239,7 +239,7 @@ func (qb *queryBuilder) handleDateRange(target string, t *reflect.Value) {
 							&qb.Predicate,
 							" AND %s.%s %s '%v'",
 							target,
-							toSnakeCase(dateTargetSlice[j]),
+							dateTargetSlice[j],
 							dateRange.Index(i),
 							dateRange.Index(i + 1),
 						)
