@@ -25,14 +25,15 @@ func BuildCreateQuery(target string, source interface{}) (string, []interface{},
 
 	for i := 0; i < t.NumField(); i++ {
 		field := parseReflection(t, i, target)
-
-		if notDefault(field.typeStr, field.value.Interface()) && field.name != "" && !field.isPrimaryKey {
-			if i != 0 {
-				qb.Columns.WriteString(", ")
-				qb.Values.WriteString(", ")
+		if (field.value.CanInterface()) {
+			if notDefault(field.typeStr, field.value.Interface()) && field.name != "" && !field.isPrimaryKey {
+				if i != 0 {
+					qb.Columns.WriteString(", ")
+					qb.Values.WriteString(", ")
+				}
+				fmt.Fprintf(&qb.Columns, "%s.%s", target, field.name)
+				fmt.Fprintf(&qb.Values, ":%s", field.name)
 			}
-			fmt.Fprintf(&qb.Columns, "%s.%s", target, field.name)
-			fmt.Fprintf(&qb.Values, ":%s", field.name)
 		}
 	}
 	qb.Values.WriteString(")")
@@ -84,24 +85,25 @@ func BuildSearchQuery(target string, source interface{}, searchPhrase string) (s
 
 	for i := 0; i < n; i++ {
 		field := parseReflection(reflectedValue, i, target)
-		if field.selectFunc.ok {
-			field.shouldIgnore = true
-			fmt.Println(field.selectFunc.name, field.shouldIgnore)
-		}
-		fields = append(fields, field)
-		if field.name != "" && !field.shouldIgnore {
-			if field.typeStr == "string" && field.value.String() == "" {
-				fieldMask = append(fieldMask, field.self.Name)
-			} else if field.value.CanAddr() {
-				qb.writeAndPredicate(field, fieldMask)
+		if field.value.CanInterface() {
+			if field.selectFunc.ok {
+				field.shouldIgnore = true
+				fmt.Println(field.selectFunc.name, field.shouldIgnore)
 			}
-		} else if field.selectFunc.ok {
-			fmt.Println("writing select function field")
-			qb.writeSelectFunc(field)
+			fields = append(fields, field)
+			if field.name != "" && !field.shouldIgnore {
+				if field.typeStr == "string" && field.value.String() == "" {
+					fieldMask = append(fieldMask, field.self.Name)
+				} else if field.value.CanAddr() {
+					qb.writeAndPredicate(field, fieldMask)
+				}
+			} else if field.selectFunc.ok {
+				fmt.Println("writing select function field")
+				qb.writeSelectFunc(field)
+			}
 		}
 	}
 
-	fmt.Println(fieldMask)
 	qb.Predicate.WriteString(" AND (")
 	for i := 0; i < n; i++ {
 		field := fields[i]
@@ -135,11 +137,13 @@ func BuildCountQuery(target string, source interface{}, fieldMask ...string) (st
 	qb.Predicate.WriteString(" WHERE TRUE")
 	for i := 0; i < reflectedValue.NumField(); i++ {
 		field := parseReflection(reflectedValue, i, target)
-		if field.name != "" && field.value.CanAddr() {
-			qb.writeAndPredicate(field, fieldMask)
-		}
-		if field.hasForeignKey {
-			qb.handleForeignKey(field)
+		if field.value.CanInterface() {
+			if field.name != "" && field.value.CanAddr() {
+				qb.writeAndPredicate(field, fieldMask)
+			}
+			if field.hasForeignKey {
+				qb.handleForeignKey(field)
+			}
 		}
 	}
 	result := qb.getReadResult(target, &reflectedValue)

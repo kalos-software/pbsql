@@ -431,8 +431,10 @@ type Transaction struct {
 	DateTarget string
 }
 type Task struct {
-	// @inject_tag: db:"task_id" primary_key:"y"
+	// @inject_tag: db:"task_id " primary_key:"y"
 	Id int32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty" db:"task_id" primary_key:"y"`
+	// @inect_tag: multi_value:"external_id"
+	ExternalIds []string `protobuf:"varint,36,opt,name=external_id,json=externalId,proto3" json:"external_id,omitempty" multi_value:"external_id"`
 	// @inject_tag: db:"external_id"
 	ExternalId int32 `protobuf:"varint,2,opt,name=external_id,json=externalId,proto3" json:"external_id,omitempty" db:"external_id"`
 	// @inject_tag: db:"external_code" nullable:"y"

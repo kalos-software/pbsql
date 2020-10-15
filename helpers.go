@@ -32,6 +32,7 @@ type field struct {
 	dateTarget string
 	dateRange []string
 	selectFunc *selectFuncData
+	isMultiValue bool
 	name string
 }
 
@@ -43,7 +44,6 @@ type selectFuncData struct {
 
 
 func parseReflection(val reflect.Value, i int, target string) *field {
-	//var dateRange []string
 	self := val.Type().Field(i)
 	value := val.Field(i)
 	name := self.Tag.Get("db")
@@ -56,13 +56,10 @@ func parseReflection(val reflect.Value, i int, target string) *field {
 		argName: self.Tag.Get("func_arg_name"),
 	}
 
-
-	dateTarget := self.Tag.Get("date_target")
-	if dateTarget != "" {
-		//dateRange = value.Interface().([]string)
+	if self.Tag.Get("multi_value") != "" {
+		fmt.Println("value", value)
+		fmt.Println(i)
 	}
-	
-	
 
 	return &field{
 		value: value,
@@ -73,9 +70,8 @@ func parseReflection(val reflect.Value, i int, target string) *field {
 		isPrimaryKey: self.Tag.Get("primary_key") != "",
 		shouldIgnore: self.Tag.Get("ignore") != "",
 		hasForeignKey: foreignKey != "",
+		isMultiValue: self.Tag.Get("multi_value") != "",
 		selectFunc: selectFunc,
-		//dateRange: dateRange,
-		//dateTarget: dateTarget,
 		name: name,
 	}
 }
@@ -124,11 +120,17 @@ func (qb *queryBuilder) writeSelectFunc(f *field) {
 func (qb *queryBuilder) writePredicate(f *field, fieldMask []string, predicateStr string) {
 	if notDefault(f.typeStr, f.value.Interface()) || findInMask(fieldMask, f.self.Name) {
 		fmt.Fprintf(&qb.Predicate, predicateStr, f.table, f.name)
+		if f.isMultiValue {
+			fmt.Println("value")
+			fmt.Print(f.value)
+			fmt.Fprintf(&qb.Predicate, " IN (%s)", f.value)
+		} else {
 		if f.typeStr == "string" {
 			fmt.Fprintf(&qb.Predicate, strComparison, f.name)
 		} else {
 			fmt.Fprintf(&qb.Predicate,  valComparison, f.name)
 		}
+	}
 	}
 }
 
