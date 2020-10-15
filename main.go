@@ -85,7 +85,6 @@ func BuildSearchQuery(target string, source interface{}, searchPhrase string) (s
 
 	for i := 0; i < n; i++ {
 		field := parseReflection(reflectedValue, i, target)
-		if field.value.CanInterface() {
 			if field.selectFunc.ok {
 				field.shouldIgnore = true
 				fmt.Println(field.selectFunc.name, field.shouldIgnore)
@@ -101,7 +100,6 @@ func BuildSearchQuery(target string, source interface{}, searchPhrase string) (s
 				fmt.Println("writing select function field")
 				qb.writeSelectFunc(field)
 			}
-		}
 	}
 
 	qb.Predicate.WriteString(" AND (")
