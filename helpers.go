@@ -160,6 +160,7 @@ func (qb *queryBuilder) writeAndPredicate(f *field, fieldMask []string) {
 
 func (qb *queryBuilder) getReadResult(table string, v *reflect.Value) string {
 	fmt.Fprintf(&qb.Core, queryCore, qb.Fields.String(), table, qb.Joins.String(), qb.Predicate.String())
+	qb.handleGroupBy(v)
 	qb.handleOrder(v)
 	return strings.Replace(strings.Replace(qb.Core.String(), ", FROM", " FROM", 1), "( OR", "(", 1)
 }
@@ -167,6 +168,14 @@ func (qb *queryBuilder) getReadResult(table string, v *reflect.Value) string {
 func (qb *queryBuilder) getUpdateResult() string {
 	qb.Core.WriteString(qb.Predicate.String())
 	return strings.Replace(qb.Core.String(), ", WHERE", " WHERE", 1)	
+}
+
+func (qb *queryBuilder) handleGroupBy(v *reflect.Value) {
+	groupBy := v.FieldByName("GroupBy")
+	if groupBy.CanAddr() && groupBy.String() != "" {
+		groupStr := fmt.Sprintf(" group by %s", groupBy.String())
+		fmt.Fprintf(&qb.Core, groupStr)
+	}
 }
 
 func (qb *queryBuilder) handleOrder(v *reflect.Value) {

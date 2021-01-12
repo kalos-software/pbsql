@@ -68,10 +68,11 @@ func TestBuildCount(t *testing.T) {
 
 func TestBuildRead(t *testing.T) {
 	//u := &User{ServicesRendered: &ServicesRendered{OrderBy: "cheese"}, OrderBy: "cheesewizz"}
-	testTask.IsActive = 0
-	testTask.NotEquals = []string{"IsActive"}
-	//testEvent.OrderBy = "date_started"
-	qry, args, err := BuildReadQueryWithNotList("task", &testTask, testTask.NotEquals)
+	//testTask.IsActive = 0
+	//testTask.NotEquals = []string{"IsActive"}
+	testTask.GroupBy = "creator_user_id"
+	testTask.OrderBy = "time_created"
+	qry, args, err := BuildReadQuery("task", &testTask)
 	fmt.Print(qry)
 	if err != nil {
 		t.Fatal(err.Error())
