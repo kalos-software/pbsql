@@ -94,7 +94,7 @@ func BuildSearchQuery(target string, source interface{}, searchPhrase string) (s
 				if field.typeStr == "string" && field.value.String() == "" {
 					fieldMask = append(fieldMask, field.self.Name)
 				} else if field.value.CanAddr() {
-					qb.writeAndPredicate(field, fieldMask)
+					qb.writePredicate(field, fieldMask, andPredicate)
 				}
 			} else if field.selectFunc.ok {
 				fmt.Println("writing select function field")
@@ -109,7 +109,7 @@ func BuildSearchQuery(target string, source interface{}, searchPhrase string) (s
 			qb.writeSelectField(field)
 			if field.value.CanAddr() {
 				if field.typeStr == "string" && field.value.String() == "" {
-					qb.writeOrPredicate(field, fieldMask)
+					qb.writePredicate(field, fieldMask, orPredicate)
 				}
 			}
 		}
@@ -137,7 +137,7 @@ func BuildCountQuery(target string, source interface{}, fieldMask ...string) (st
 		field := parseReflection(reflectedValue, i, target)
 		if field.value.CanInterface() {
 			if field.name != "" && field.value.CanAddr() {
-				qb.writeAndPredicate(field, fieldMask)
+				qb.writePredicate(field, fieldMask, andPredicate)
 			}
 			if field.hasForeignKey {
 				qb.handleForeignKey(field)
@@ -165,7 +165,7 @@ func BuildReadQuery(target string, source interface{}, fieldMask ...string) (str
 			if !field.shouldIgnore && !field.selectFunc.ok {
 				qb.writeSelectField(field)
 				if field.value.CanAddr() {
-					qb.writeAndPredicate(field, fieldMask)
+					qb.writePredicate(field, fieldMask, andPredicate)
 				}
 			} else if field.selectFunc.ok {
 				qb.writeSelectFunc(field)
@@ -180,6 +180,41 @@ func BuildReadQuery(target string, source interface{}, fieldMask ...string) (str
 	return sqlx.Named(result, source)
 }
 
+// BuildReadQueryWithNotList accepts a target table name and a protobuf message and attempts to build a valid SQL select statement,
+// ignoring any struct fields with default values when writing predicates. Fields must be tagged with `db:""` in order to be
+// included in the result string.
+//
+// Returns a SQL statement as a string, a slice of args to interpolate, and an error
+func BuildReadQueryWithNotList(target string, source interface{}, notList []string) (string, []interface{}, error) {
+	reflectedValue := reflect.ValueOf(source).Elem()
+	var qb queryBuilder
+	qb.Core.WriteString("SELECT ")
+	qb.Predicate.WriteString(" WHERE true")
+	
+	for i := 0; i < reflectedValue.NumField(); i++ {
+		field := parseReflection(reflectedValue, i, target)
+		if field.name != "" {
+			if !field.shouldIgnore && !field.selectFunc.ok {
+				qb.writeSelectField(field)
+				if field.value.CanAddr() {
+					if findInMask(notList, field.name) {
+						qb.writeNotPredicate(field, notList, andPredicate)
+					} else {
+						qb.writePredicate(field, notList, andPredicate)
+					}
+				}
+			} else if field.selectFunc.ok {
+				qb.writeSelectFunc(field)
+			}
+		}
+		if field.hasForeignKey {
+			qb.handleForeignKey(field)
+		}
+	}
+	qb.handleDateRange(target, &reflectedValue)
+	result := qb.getReadResult(target, &reflectedValue)
+	return sqlx.Named(result, source)
+}
 // BuildUpdateQuery accepts a target table name `target`, a struct `source`, and a list of struct fields `fieldMask`
 // and attempts to build a valid sql update statement for use with sqlx.Named, ignoring any struct fields not present
 // in `fieldMask`. Struct fields must also be tagged with `db:""`, and the primary key should be tagged as

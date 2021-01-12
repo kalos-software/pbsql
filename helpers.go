@@ -13,7 +13,9 @@ const selectFuncField = "ifnull(%s(%s.%s), %s) as %s, "
 const andPredicate = " AND %s.%s"
 const orPredicate = " OR %s.%s"
 const strComparison = " LIKE :%s"
+const notStrComparison = " NOT LIKE :%s"
 const valComparison = " = :%s"
+const notValComparison = " != :%s"
 const queryCore = "%sFROM %s%s%s"
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
 var matchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
@@ -121,8 +123,6 @@ func (qb *queryBuilder) writePredicate(f *field, fieldMask []string, predicateSt
 	if notDefault(f.typeStr, f.value.Interface()) || findInMask(fieldMask, f.self.Name) {
 		fmt.Fprintf(&qb.Predicate, predicateStr, f.table, f.name)
 		if f.isMultiValue {
-			fmt.Println("value")
-			fmt.Print(f.value)
 			fmt.Fprintf(&qb.Predicate, " IN (%s)", f.value)
 		} else {
 		if f.typeStr == "string" {
@@ -134,13 +134,29 @@ func (qb *queryBuilder) writePredicate(f *field, fieldMask []string, predicateSt
 	}
 }
 
+func (qb *queryBuilder) writeNotPredicate(f *field, fieldMask []string, predicateStr string) {
+	if notDefault(f.typeStr, f.value.Interface()) || findInMask(fieldMask, f.self.Name) {
+		fmt.Fprintf(&qb.Predicate, predicateStr, f.table, f.name)
+		if f.isMultiValue {
+			fmt.Fprintf(&qb.Predicate, " IN (%s)", f.value)
+		} else {
+		if f.typeStr == "string" {
+			fmt.Fprintf(&qb.Predicate, notStrComparison, f.name)
+		} else {
+			fmt.Fprintf(&qb.Predicate,  notValComparison, f.name)
+		}
+	}
+	}
+}
+
+/*
 func (qb *queryBuilder) writeOrPredicate(f *field, fieldMask []string) {
 	qb.writePredicate(f, fieldMask, orPredicate)
 }
 
 func (qb *queryBuilder) writeAndPredicate(f *field, fieldMask []string) {
 	qb.writePredicate(f, fieldMask, andPredicate)
-}
+}*/
 
 func (qb *queryBuilder) getReadResult(table string, v *reflect.Value) string {
 	fmt.Fprintf(&qb.Core, queryCore, qb.Fields.String(), table, qb.Joins.String(), qb.Predicate.String())
