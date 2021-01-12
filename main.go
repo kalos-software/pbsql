@@ -87,7 +87,6 @@ func BuildSearchQuery(target string, source interface{}, searchPhrase string) (s
 		field := parseReflection(reflectedValue, i, target)
 			if field.selectFunc.ok {
 				field.shouldIgnore = true
-				fmt.Println(field.selectFunc.name, field.shouldIgnore)
 			}
 			fields = append(fields, field)
 			if field.name != "" && !field.shouldIgnore {
@@ -97,7 +96,6 @@ func BuildSearchQuery(target string, source interface{}, searchPhrase string) (s
 					qb.writePredicate(field, fieldMask, andPredicate)
 				}
 			} else if field.selectFunc.ok {
-				fmt.Println("writing select function field")
 				qb.writeSelectFunc(field)
 			}
 	}
@@ -122,7 +120,6 @@ func BuildSearchQuery(target string, source interface{}, searchPhrase string) (s
 	qry, falseArgs, err := sqlx.Named(qb.getReadResult(target, &reflectedValue), source)
 	_, altArgs, _ := BuildReadQuery(target, source)
 	searchArgs := getSearchArgs(len(falseArgs) - len(altArgs), searchPhrase)
-	fmt.Println(qry)
 	return qry, append(altArgs, searchArgs...), err
 }
 
@@ -197,7 +194,7 @@ func BuildReadQueryWithNotList(target string, source interface{}, notList []stri
 			if !field.shouldIgnore && !field.selectFunc.ok {
 				qb.writeSelectField(field)
 				if field.value.CanAddr() {
-					if findInMask(notList, field.name) {
+					if findInMask(notList, field.self.Name) {
 						qb.writeNotPredicate(field, notList, andPredicate)
 					} else {
 						qb.writePredicate(field, notList, andPredicate)

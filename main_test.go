@@ -14,6 +14,7 @@ type TestStruct struct {
 	GeoLng     float64 `db:"geolocation_lng" nullable:"y"`
 	IsActive   int32   `db:"is_active"`
 	PropertyID int32   `db:"property_id" foreign_key:"property_id" foreign_table:"properties"`
+	NotEquals []string 
 	OrderBy    string
 	OrderDir   string
 }
@@ -67,13 +68,11 @@ func TestBuildCount(t *testing.T) {
 
 func TestBuildRead(t *testing.T) {
 	//u := &User{ServicesRendered: &ServicesRendered{OrderBy: "cheese"}, OrderBy: "cheesewizz"}
-	testTask.IsActive = 1
-	testTask.ExternalId = 101253
-	testTask.DateTarget = ""
-	testTask.DateRange = []string{">", "2020-01-01", "<", "2020-01-01"}
-	testTask.ExternalIds = []string{"1", "2", "3"}
+	testTask.IsActive = 0
+	testTask.NotEquals = []string{"IsActive"}
 	//testEvent.OrderBy = "date_started"
-	qry, args, err := BuildReadQuery("task", &testTask)
+	qry, args, err := BuildReadQueryWithNotList("task", &testTask, testTask.NotEquals)
+	fmt.Print(qry)
 	if err != nil {
 		t.Fatal(err.Error())
 	}

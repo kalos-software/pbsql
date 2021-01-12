@@ -499,6 +499,7 @@ type Task struct {
 	OwnerName string `db:"owner_name" select_func:"name_of_user" func_arg_name:"external_id"`
 	SpiffToolCloseoutDate string   `protobuf:"bytes,32,opt,name=spiff_tool_closeout_date,json=spiffToolCloseoutDate,proto3" json:"spiff_tool_closeout_date,omitempty" db:"spiff_tool_closeout_date" nullable:"y"`
 	FieldMask             []string `protobuf:"bytes,33,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
+	NotEquals             []string `protobuf:"bytes,54,rep,name=not_list,json=notEquals,proto3" json:"not_equals,omitempty"`
 	PageNumber            int32    `protobuf:"varint,34,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
 	// @inject_tag: date_target:"date_performed"
 	DateRange            []string                                        `protobuf:"bytes,35,rep,name=date_range,json=dateRange,proto3" json:"date_range,omitempty" date_target:"date_performed"`
