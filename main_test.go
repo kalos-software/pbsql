@@ -37,6 +37,8 @@ var testTxn Transaction
 
 var testTask Task
 
+var testTSL TimesheetLine
+
 func TestMain(m *testing.M) {
 	target.ID = 1
 	target.Date = "2019-01-01"
@@ -70,9 +72,13 @@ func TestBuildRead(t *testing.T) {
 	//u := &User{ServicesRendered: &ServicesRendered{OrderBy: "cheese"}, OrderBy: "cheesewizz"}
 	//testTask.IsActive = 0
 	//testTask.NotEquals = []string{"IsActive"}
-	testTask.GroupBy = "creator_user_id"
-	testTask.OrderBy = "time_created"
-	qry, args, err := BuildReadQuery("task", &testTask)
+	testTSL.GroupBy = "technician_user_id"
+	testTSL.OrderBy = "time_started"
+	testTSL.UserApprovalDatetime = "0001-01-01 00:00:00"
+	testTSL.NotEquals = []string{"UserApprovalDatetime"}
+	testTSL.FieldMask = []string{"AdminApprovalUserId"}
+	testTSL.IsActive = 1
+	qry, args, err := BuildReadQueryWithNotList("timesheet_line", &testTSL, testTSL.NotEquals, testTSL.FieldMask...)
 	fmt.Print(qry)
 	if err != nil {
 		t.Fatal(err.Error())

@@ -1,5 +1,7 @@
 package pbsql
 
+import "google.golang.org/protobuf/runtime/protoimpl"
+
 type Event struct {
 	// @inject_tag: db:"id" primary_key:"y"
 	Id int32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty" db:"id" primary_key:"y"`
@@ -506,8 +508,64 @@ type Task struct {
 	DateTarget           string                                          `protobuf:"bytes,43,opt,name=date_target,json=dateTarget,proto3" json:"date_target,omitempty"`
 	OrderBy              string                                          `protobuf:"bytes,40,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
 	OrderDir             string                                          `protobuf:"bytes,41,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
-		XXX_NoUnkeyedLiteral struct{}                                        `json:"-"`
+	XXX_NoUnkeyedLiteral struct{}                                        `json:"-"`
 	XXX_unrecognized     []byte                                          `json:"-"`
 	XXX_sizecache        int32                                           `json:"-"`
 	GroupBy              string
+}
+
+type TimesheetLine struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// @inject_tag: db:"id" primary_key:"y"
+	Id int32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty" db:"id" primary_key:"y"`
+	// @inject_tag: db:"event_id" nullable:"y"
+	EventId int32 `protobuf:"varint,2,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty" db:"event_id" nullable:"y"`
+	// @inject_tag: db:"services_rendered_id" nullable:"y"
+	ServicesRenderedId int32 `protobuf:"varint,3,opt,name=services_rendered_id,json=servicesRenderedId,proto3" json:"services_rendered_id,omitempty" db:"services_rendered_id" nullable:"y"`
+	// @inject_tag: db:"task_event_id" nullable:"y"
+	TaskEventId int32 `protobuf:"varint,4,opt,name=task_event_id,json=taskEventId,proto3" json:"task_event_id,omitempty" db:"task_event_id" nullable:"y"`
+	// @inject_tag: db:"class_code"
+	ClassCodeId int32 `protobuf:"varint,5,opt,name=class_code_id,json=classCodeId,proto3" json:"class_code_id,omitempty" db:"class_code"`
+	// @inject_tag: db:"department_code"
+	DepartmentCode int32 `protobuf:"varint,6,opt,name=department_code,json=departmentCode,proto3" json:"department_code,omitempty" db:"department_code"`
+	// @inject_tag: db:"brief_description" nullable:"y"
+	BriefDescription string `protobuf:"bytes,7,opt,name=brief_description,json=briefDescription,proto3" json:"brief_description,omitempty" db:"brief_description" nullable:"y"`
+	// @inject_tag: db:"reference_number" nullable:"y"
+	ReferenceNumber string `protobuf:"bytes,8,opt,name=reference_number,json=referenceNumber,proto3" json:"reference_number,omitempty" db:"reference_number" nullable:"y"`
+	// @inject_tag: db:"notes" nullable:"y"
+	Notes string `protobuf:"bytes,9,opt,name=notes,proto3" json:"notes,omitempty" db:"notes" nullable:"y"`
+	// @inject_tag: db:"admin_approval_user_id" nullable:"y"
+	AdminApprovalUserId int32 `protobuf:"varint,10,opt,name=admin_approval_user_id,json=adminApprovalUserId,proto3" json:"admin_approval_user_id,omitempty" db:"admin_approval_user_id" nullable:"y"`
+	// @inject_tag: db:"admin_approval_datetime" nullable:"y"
+	AdminApprovalDatetime string `protobuf:"bytes,11,opt,name=admin_approval_datetime,json=adminApprovalDatetime,proto3" json:"admin_approval_datetime,omitempty" db:"admin_approval_datetime" nullable:"y"`
+	// @inject_tag: db:"user_approval_datetime" nullable:"y"
+	UserApprovalDatetime string `protobuf:"bytes,12,opt,name=user_approval_datetime,json=userApprovalDatetime,proto3" json:"user_approval_datetime,omitempty" db:"user_approval_datetime" nullable:"y"`
+	// @inject_tag: db:"time_started" nullable:"y"
+	TimeStarted string `protobuf:"bytes,13,opt,name=time_started,json=timeStarted,proto3" json:"time_started,omitempty" db:"time_started" nullable:"y"`
+	// @inject_tag: db:"time_finished" nullable:"y"
+	TimeFinished string `protobuf:"bytes,14,opt,name=time_finished,json=timeFinished,proto3" json:"time_finished,omitempty" db:"time_finished" nullable:"y"`
+	// @inject_tag: db:"technician_user_id"
+	TechnicianUserId int32 `protobuf:"varint,15,opt,name=technician_user_id,json=technicianUserId,proto3" json:"technician_user_id,omitempty" db:"technician_user_id"`
+	// @inject_tag: db:"isactive" nullable:"y"
+	IsActive   int32                                   `protobuf:"varint,16,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty" db:"isactive" nullable:"y"`
+	FieldMask  []string                                `protobuf:"bytes,17,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
+	PageNumber int32                                   `protobuf:"varint,18,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
+	// @inject_tag: date_target:"time_started"
+	DateRange  []string `protobuf:"bytes,20,rep,name=date_range,json=dateRange,proto3" json:"date_range,omitempty" date_target:"time_started"`
+	DateTarget []string `protobuf:"bytes,21,rep,name=date_target,json=dateTarget,proto3" json:"date_target,omitempty"`
+	// @inject_tag: db:"property_id" ignore:"y"
+	EventPropertyId int32 `protobuf:"varint,22,opt,name=event_property_id,json=eventPropertyId,proto3" json:"event_property_id,omitempty" db:"property_id" ignore:"y"`
+	// @inject_tag: db:"user_id" ignore:"y"
+	EventUserId int32 `protobuf:"varint,23,opt,name=event_user_id,json=eventUserId,proto3" json:"event_user_id,omitempty" db:"user_id" ignore:"y"`
+	// @inject_tag: db:"technician_user_name" select_func:"name_of_user" func_arg_name:"technician_user_id" ignore:"y"
+	TechnicianUserName string `protobuf:"bytes,24,opt,name=technician_user_name,json=technicianUserName,proto3" json:"technician_user_name,omitempty" db:"technician_user_name" select_func:"name_of_user" func_arg_name:"technician_user_id" ignore:"y"`
+	// @inject_tag: db:"department_name" select_func:"name_of_department_by_id" func_arg_name:"department_code" ignore:"y"
+	DepartmentName string   `protobuf:"bytes,25,opt,name=department_name,json=departmentName,proto3" json:"department_name,omitempty" db:"department_name" select_func:"name_of_department_by_id" func_arg_name:"department_code" ignore:"y"`
+	NotEquals      []string `protobuf:"bytes,26,rep,name=not_equals,json=notEquals,proto3" json:"not_equals,omitempty"`
+	OrderBy        string   `protobuf:"bytes,27,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
+	OrderDir       string   `protobuf:"bytes,28,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
+	GroupBy        string   `protobuf:"bytes,29,opt,name=group_by,json=groupBy,proto3" json:"group_by,omitempty"`
 }

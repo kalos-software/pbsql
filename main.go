@@ -182,7 +182,7 @@ func BuildReadQuery(target string, source interface{}, fieldMask ...string) (str
 // included in the result string.
 //
 // Returns a SQL statement as a string, a slice of args to interpolate, and an error
-func BuildReadQueryWithNotList(target string, source interface{}, notList []string) (string, []interface{}, error) {
+func BuildReadQueryWithNotList(target string, source interface{}, notList []string, fieldMask ...string) (string, []interface{}, error) {
 	reflectedValue := reflect.ValueOf(source).Elem()
 	var qb queryBuilder
 	qb.Core.WriteString("SELECT ")
@@ -197,7 +197,7 @@ func BuildReadQueryWithNotList(target string, source interface{}, notList []stri
 					if findInMask(notList, field.self.Name) {
 						qb.writeNotPredicate(field, notList, andPredicate)
 					} else {
-						qb.writePredicate(field, notList, andPredicate)
+						qb.writePredicate(field, fieldMask, andPredicate)
 					}
 				}
 			} else if field.selectFunc.ok {
