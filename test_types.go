@@ -568,4 +568,5 @@ type TimesheetLine struct {
 	OrderBy        string   `protobuf:"bytes,27,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
 	OrderDir       string   `protobuf:"bytes,28,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
 	GroupBy        string   `protobuf:"bytes,29,opt,name=group_by,json=groupBy,proto3" json:"group_by,omitempty"`
+	DepartmentCodeList string `protobuf:"varint,6,opt,name=department_code_list,json=departmentCodeList,proto3" json:"department_code_list,omitempty" multi_value:"y" db:"department_code" ignore:"y"`
 }

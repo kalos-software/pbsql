@@ -72,13 +72,14 @@ func TestBuildRead(t *testing.T) {
 	//u := &User{ServicesRendered: &ServicesRendered{OrderBy: "cheese"}, OrderBy: "cheesewizz"}
 	//testTask.IsActive = 0
 	//testTask.NotEquals = []string{"IsActive"}
-	testTSL.GroupBy = "technician_user_id"
+	/*testTSL.GroupBy = "technician_user_id"
 	testTSL.OrderBy = "time_started"
 	testTSL.UserApprovalDatetime = "0001-01-01 00:00:00"
 	testTSL.NotEquals = []string{"UserApprovalDatetime"}
 	testTSL.FieldMask = []string{"AdminApprovalUserId"}
-	testTSL.IsActive = 1
-	qry, args, err := BuildReadQueryWithNotList("timesheet_line", &testTSL, testTSL.NotEquals, testTSL.FieldMask...)
+	testTSL.IsActive = 1*/
+	testTSL.DepartmentCodeList = "9,10,11"
+	qry, args, err := BuildReadQueryWithNotList("timesheet_line", &testTSL,[]string{"DepartmentCodeList"}, testTSL.FieldMask...)
 	fmt.Print(qry)
 	if err != nil {
 		t.Fatal(err.Error())
