@@ -79,7 +79,7 @@ func TestBuildRead(t *testing.T) {
 	testTSL.FieldMask = []string{"AdminApprovalUserId"}
 	testTSL.IsActive = 1*/
 	testTSL.DepartmentCodeList = "9,10,11"
-	qry, args, err := BuildReadQueryWithNotList("timesheet_line", &testTSL,[]string{"DepartmentCodeList"}, testTSL.FieldMask...)
+	qry, args, err := BuildReadQuery("timesheet_line", &testTSL, testTSL.FieldMask...)
 	fmt.Print(qry)
 	if err != nil {
 		t.Fatal(err.Error())

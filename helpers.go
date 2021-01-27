@@ -17,6 +17,7 @@ const notStrComparison = " NOT LIKE :%s"
 const valComparison = " = :%s"
 const notValComparison = " != :%s"
 const queryCore = "%sFROM %s%s%s"
+const isoDateFormat = "2006-01-02 15:04:05"
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
 var matchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
 
@@ -109,14 +110,14 @@ type queryBuilder struct {
 
 func (qb *queryBuilder) writeSelectField(f *field) {
 	if f.isNullable {
-		fmt.Fprintf(&qb.Fields, nullSelectField, f.table, f.name, getDefault(f.typeStr), f.name)
+		fmt.Fprintf(&qb.Fields, nullSelectField, f.table, f.name, getDefault(f.typeStr, f.name), f.name)
 	} else {
 		fmt.Fprintf(&qb.Fields, selectField, f.table, f.name)
 	}
 }
 
 func (qb *queryBuilder) writeSelectFunc(f *field) {
-	fmt.Fprintf(&qb.Fields, selectFuncField, f.selectFunc.name, f.table, f.selectFunc.argName, getDefault(f.typeStr), f.name)
+	fmt.Fprintf(&qb.Fields, selectFuncField, f.selectFunc.name, f.table, f.selectFunc.argName, getDefault(f.typeStr, f.name), f.name)
 }
 
 func (qb *queryBuilder) writePredicate(f *field, fieldMask []string, predicateStr string) {
@@ -363,7 +364,7 @@ func notDefault(typeName string, fieldVal interface{}) bool {
 }
 
 // `getDefault` returns the unitialized value of a type for sql ifnull statements
-func getDefault(typeName string) string {
+func getDefault(typeName string, fieldName string) string {
 	switch typeName {
 	case "byte", "rune", "uint", "int", "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
 		return "0"
@@ -372,6 +373,10 @@ func getDefault(typeName string) string {
 	case "bool":
 		return "0"
 	case "string":
+		lowerName := strings.ToLower(fieldName)
+		if strings.Contains(lowerName, "date") || strings.Contains(lowerName, "timestamp") {
+			return "0001-01-01 00::00::00"
+		}
 		return "''"
 	default:
 		panic(fmt.Errorf("couldn't determine default value for provided type %s", typeName))
