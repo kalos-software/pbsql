@@ -117,9 +117,6 @@ func (qb *queryBuilder) writeSelectFunc(f *field) {
 }
 
 func (qb *queryBuilder) writePredicate(f *field, fieldMask []string, predicateStr string) {
-	if (f.isMultiValue) {
-		fmt.Printf("%#v\n", *f)
-	}
 	if notDefault(f.typeStr, f.value.Interface()) || findInMask(fieldMask, f.self.Name) {
 		fmt.Fprintf(&qb.Predicate, predicateStr, f.table, f.name)
 		if f.isMultiValue {
