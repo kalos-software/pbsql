@@ -1,7 +1,6 @@
 package pbsql
 
 import (
-	"fmt"
 	"os"
 	"testing"
 )
@@ -50,54 +49,33 @@ func TestMain(m *testing.M) {
 }
 
 func TestBuildCreate(t *testing.T) {
-	qry, _, err := BuildCreateQuery("task", &testTask)
+	_, _, err := BuildCreateQuery("task", &testTask)
 	if err != nil {
-		t.Fatal("BuildCreateQuery failed", err)
-	}
-
-	if qry != expectedCreateQry {
-		t.Log("Got: ", qry)
-		t.Fatal("Expected:", expectedCreateQry)
+		t.Fatal("BuildCreateQuery failed", err.Error())
 	}
 }
 
 func TestBuildCount(t *testing.T) {
 	testTask.IsActive = 1
 	testTask.ExternalId = 101253
-	qry, _, _ := BuildCountQuery("task", &testTask)
-	fmt.Println(qry)
+	_, _, err := BuildCountQuery("task", &testTask)
+	if err != nil {
+		t.Fatal("BuildCountQuery failed", err.Error())
+	}
 }
 
 func TestBuildRead(t *testing.T) {
-	//u := &User{ServicesRendered: &ServicesRendered{OrderBy: "cheese"}, OrderBy: "cheesewizz"}
-	//testTask.IsActive = 0
-	//testTask.NotEquals = []string{"IsActive"}
-	/*testTSL.GroupBy = "technician_user_id"
-	testTSL.OrderBy = "time_started"
-	testTSL.UserApprovalDatetime = "0001-01-01 00:00:00"
-	testTSL.NotEquals = []string{"UserApprovalDatetime"}
-	testTSL.FieldMask = []string{"AdminApprovalUserId"}
-	testTSL.IsActive = 1*/
 	testTSL.DepartmentCodeList = "9,10,11"
-	qry, args, err := BuildReadQuery("timesheet_line", &testTSL, testTSL.FieldMask...)
-	fmt.Print(qry)
+	_, _, err := BuildReadQuery("timesheet_line", &testTSL, testTSL.FieldMask...)
 	if err != nil {
-		t.Fatal(err.Error())
+		t.Fatal("BuildRead failed", err.Error())
 	}
-	fmt.Printf("%#v\n", args)
-	t.Log(qry, args)
-	/*if qry != expectedReadQry {
-		t.Log("Got:", qry)
-		t.Fatal("Expected:", expectedReadQry)
-	}*/
 }
 
 func TestBuildSearch(t *testing.T) {
 	testTask.IsActive = 1
 	testTask.ExternalId = 101253
 	testTask.SpiffAddress = "fart"
-	//testTask.OrderBy = "date_performed"
-	//testTask.OrderDir = "ASC"
 	_, _, err := BuildSearchQuery("task", &testTask, "search")
 	if err != nil {
 		t.Fatal(err.Error())
@@ -108,8 +86,8 @@ func TestBuildRelatedReadQuery(t *testing.T) {
 	testUser.Id = 8418
 	testUser.ServicesRendered = &ServicesRendered{}
 	//_ := BuildRelatedReadQuery(&testEvent, Relationship{ ForeignKey: "property_id", ForeignValue: testEvent.PropertyId})
-	qry2 := BuildRelatedReadQuery(&testUser, "technician_user_id", testUser.Id)
-	fmt.Println(qry2)
+	BuildRelatedReadQuery(&testUser, "technician_user_id", testUser.Id)
+	//fmt.Println(qry)
 }
 
 func TestBuildUpdate(t *testing.T) {
