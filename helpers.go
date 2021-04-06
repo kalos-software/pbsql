@@ -59,6 +59,7 @@ func parseReflection(val reflect.Value, i int, target string) *field {
 		argName: self.Tag.Get("func_arg_name"),
 	}
 
+
 	return &field{
 		value: value,
 		table: target,
@@ -116,17 +117,20 @@ func (qb *queryBuilder) writeSelectFunc(f *field) {
 }
 
 func (qb *queryBuilder) writePredicate(f *field, fieldMask []string, predicateStr string) {
+	if (f.isMultiValue) {
+		fmt.Printf("%#v\n", *f)
+	}
 	if notDefault(f.typeStr, f.value.Interface()) || findInMask(fieldMask, f.self.Name) {
 		fmt.Fprintf(&qb.Predicate, predicateStr, f.table, f.name)
 		if f.isMultiValue {
 			fmt.Fprintf(&qb.Predicate, " IN (%s)", f.value)
 		} else {
-			if f.typeStr == "string" {
-				fmt.Fprintf(&qb.Predicate, strComparison, f.name)
-			} else {
-				fmt.Fprintf(&qb.Predicate,  valComparison, f.name)
-			}
+		if f.typeStr == "string" {
+			fmt.Fprintf(&qb.Predicate, strComparison, f.name)
+		} else {
+			fmt.Fprintf(&qb.Predicate,  valComparison, f.name)
 		}
+	}
 	}
 }
 
@@ -136,12 +140,12 @@ func (qb *queryBuilder) writeNotPredicate(f *field, fieldMask []string, predicat
 		if f.isMultiValue {
 			fmt.Fprintf(&qb.Predicate, " NOT IN (%s)", f.value)
 		} else {
-			if f.typeStr == "string" {
-				fmt.Fprintf(&qb.Predicate, notStrComparison, f.name)
-			} else {
-				fmt.Fprintf(&qb.Predicate,  notValComparison, f.name)
-			}
+		if f.typeStr == "string" {
+			fmt.Fprintf(&qb.Predicate, notStrComparison, f.name)
+		} else {
+			fmt.Fprintf(&qb.Predicate,  notValComparison, f.name)
 		}
+	}
 	}
 }
 
@@ -367,7 +371,7 @@ func getDefault(typeName string, fieldName string) string {
 	case "string":
 		lowerName := strings.ToLower(fieldName)
 		if strings.Contains(lowerName, "date") || strings.Contains(lowerName, "timestamp") {
-			return "0001-01-01 00::00::00"
+			return "'0001-01-01 00::00::00'"
 		}
 		return "''"
 	default:
