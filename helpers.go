@@ -50,6 +50,9 @@ func parseReflection(val reflect.Value, i int, target string) *field {
 	self := val.Type().Field(i)
 	value := val.Field(i)
 	name := self.Tag.Get("db")
+	if name == "" {
+		name = self.Tag.Get("name")
+	}
 	foreignKey := self.Tag.Get("foreign_key")
 
 	selectFuncName := self.Tag.Get("select_func")
