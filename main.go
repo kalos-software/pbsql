@@ -235,7 +235,7 @@ func BuildUpdateQuery(target string, source interface{}, fieldMask []string) (st
 		if field.value.CanInterface() && field.name != "" {
 			if field.isPrimaryKey {
 				fmt.Fprintf(&qb.Predicate, "WHERE %s.%s = :%s", target, field.name, field.name)
-			} else if findInMask(fieldMask, field.self.Name) || field.value.CanInterface() && notDefault(field.typeStr, field.value.Interface()) || !field.shouldIgnore {
+			} else if findInMask(fieldMask, field.self.Name) && !field.shouldIgnore || field.value.CanInterface() && notDefault(field.typeStr, field.value.Interface()) {
 				fmt.Fprintf(&qb.Core, "%s.%s = :%s, ", target, field.name, field.name)
 			}
 		}
