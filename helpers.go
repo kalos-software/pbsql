@@ -228,6 +228,7 @@ func isEmptySlice(v reflect.Value) bool {
 
 func (qb *queryBuilder) handleDateRange(target string, t *reflect.Value) {
 	var dateTarget string
+
 	dateRange := t.FieldByName("DateRange")
 	dateTargetField := t.FieldByName("DateTarget")
 	canIntefaceDateTarget := dateTargetField.IsValid() && dateTargetField.CanInterface()
@@ -310,7 +311,9 @@ func (qb *queryBuilder) handleForeignKey(f *field) {
 			localName,
 		)
 	}
-	qb.handleDateRange(foreignTable, &related)
+	if !related.IsZero() {
+		qb.handleDateRange(foreignTable, &related)
+	}
 }
 
 // `notDefault` checks if a value is set to it's unitialized default, e.g. whether or not an `int32` value is `0`
