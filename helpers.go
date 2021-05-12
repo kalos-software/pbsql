@@ -311,7 +311,7 @@ func (qb *queryBuilder) handleForeignKey(f *field) {
 			localName,
 		)
 	}
-	if !related.IsZero() {
+	if !related.IsValid() {
 		qb.handleDateRange(foreignTable, &related)
 	}
 }
