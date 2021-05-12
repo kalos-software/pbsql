@@ -310,6 +310,7 @@ func (qb *queryBuilder) handleForeignKey(f *field) {
 			localName,
 		)
 	}
+	qb.handleDateRange(foreignTable, &related)
 }
 
 // `notDefault` checks if a value is set to it's unitialized default, e.g. whether or not an `int32` value is `0`
