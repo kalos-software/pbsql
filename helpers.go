@@ -122,7 +122,7 @@ func (qb *queryBuilder) writeSelectFunc(f *field) {
 func (qb *queryBuilder) writePredicate(f *field, fieldMask []string, predicateStr string) {
 	if notDefault(f.typeStr, f.value.Interface()) || findInMask(fieldMask, f.self.Name) {
 		fmt.Fprintf(&qb.Predicate, predicateStr, f.table, f.name)
-		if f.isMultiValue {
+		if f.isMultiValue && !f.value.IsZero() {
 			fmt.Fprintf(&qb.Predicate, " IN (%s)", f.value)
 		} else {
 		if f.typeStr == "string" {
@@ -311,7 +311,7 @@ func (qb *queryBuilder) handleForeignKey(f *field) {
 			localName,
 		)
 	}
-	if related.IsValid() {
+	if  related.IsValid() {
 		qb.handleDateRange(foreignTable, &related)
 	}
 }

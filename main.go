@@ -92,7 +92,7 @@ func BuildSearchQuery(target string, source interface{}, searchPhrase string) (s
 			if field.name != "" && !field.shouldIgnore {
 				if field.typeStr == "string" && field.value.String() == "" {
 					fieldMask = append(fieldMask, field.self.Name)
-				} else if field.value.CanAddr() && field.value.IsZero() {
+				} else if field.value.CanAddr() {
 					qb.writePredicate(field, fieldMask, andPredicate)
 				}
 			} else if field.selectFunc.ok {

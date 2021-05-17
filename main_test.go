@@ -1,6 +1,7 @@
 package pbsql
 
 import (
+	"log"
 	"os"
 	"testing"
 )
@@ -73,10 +74,8 @@ func TestBuildRead(t *testing.T) {
 }
 
 func TestBuildSearch(t *testing.T) {
-	testTask.IsActive = 1
-	testTask.ExternalId = 101253
-	testTask.SpiffAddress = "fart"
-	_, _, err := BuildSearchQuery("task", &testTask, "search")
+	qry, _, err := BuildSearchQuery("transaction", &testTxn, "search")
+	log.Print(qry)
 	if err != nil {
 		t.Fatal(err.Error())
 	}

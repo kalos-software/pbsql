@@ -391,6 +391,10 @@ type ServicesRendered struct {
 }
 
 type Transaction struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
 	// @inject_tag: db:"id" primary_key:"y"
 	Id int32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty" db:"id" primary_key:"y"`
 	// @inject_tag: db:"job_id" nullable:"y"
@@ -415,22 +419,41 @@ type Transaction struct {
 	IsActive int32 `protobuf:"varint,11,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty" db:"is_active" nullable:"y"`
 	// @inject_tag: db:"status_id"
 	StatusId int32 `protobuf:"varint,12,opt,name=status_id,json=statusId,proto3" json:"status_id,omitempty" db:"status_id"`
+	// @inect_tag: db:"status" select_func:"transaction_status_name" func_arg_name:"status_id" ignore:"y"
+	Status string `protobuf:"bytes,13,opt,name=status,proto3" json:"status,omitempty"`
+	// @inject_tag: db:"owner_name" select_func:"name_of_user" func_arg_name:"owner_id" ignore:"y"
+	OwnerName string `protobuf:"bytes,14,opt,name=owner_name,json=ownerName,proto3" json:"owner_name,omitempty" db:"owner_name" select_func:"name_of_user" func_arg_name:"owner_id" ignore:"y"`
+	// @inject_tag: db:"card_used" select_func:"card_by_user" func_arg_name:"owner_id" ignore:"y"
+	CardUsed    string                                      `protobuf:"bytes,15,opt,name=card_used,json=cardUsed,proto3" json:"card_used,omitempty" db:"card_used" select_func:"card_by_user" func_arg_name:"owner_id" ignore:"y"`
+	PageNumber  int32                                       `protobuf:"varint,18,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
+	FieldMask   []string                                    `protobuf:"bytes,19,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
+	OrderBy     string                                      `protobuf:"bytes,22,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
+	OrderDir    string                                      `protobuf:"bytes,23,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
 	// @inject_tag: db:"is_audited"
-	OwnerName string `db:"owner_name",select_func:"name_of_user",func_arg_name:"owner_id"`
 	IsAudited bool `protobuf:"varint,24,opt,name=is_audited,json=isAudited,proto3" json:"is_audited,omitempty" db:"is_audited"`
-	// @inect_tag: db:"is_recorded"
-	IsRecorded           bool                                        `protobuf:"varint,25,opt,name=is_recorded,json=isRecorded,proto3" json:"is_recorded,omitempty" db:"is_recorded"`
-	Status               string                                      `protobuf:"bytes,13,opt,name=status,proto3" json:"status,omitempty"`
-	CardUsed             string                                      `protobuf:"bytes,15,opt,name=card_used,json=cardUsed,proto3" json:"card_used,omitempty"`
-	PageNumber           int32                                       `protobuf:"varint,18,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
-	FieldMask            []string                                    `protobuf:"bytes,19,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
-	OrderBy              string                                      `protobuf:"bytes,22,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
-	OrderDir             string                                      `protobuf:"bytes,23,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                                    `json:"-"`
-	XXX_unrecognized     []byte                                      `json:"-"`
-	XXX_sizecache        int32                                       `json:"-"`
-	DateRange []string `date_target:"timestamp"`
-	DateTarget string
+	// @inject_tag: db:"is_recorded"
+	IsRecorded   bool   `protobuf:"varint,25,opt,name=is_recorded,json=isRecorded,proto3" json:"is_recorded,omitempty" db:"is_recorded"`
+	SearchPhrase string `protobuf:"bytes,26,opt,name=search_phrase,json=searchPhrase,proto3" json:"search_phrase,omitempty"`
+	// @inject_tag: db:"artificial_id" nullable:"y"
+	ArtificalId string `protobuf:"bytes,27,opt,name=artifical_id,json=artificalId,proto3" json:"artifical_id,omitempty" db:"artificial_id" nullable:"y"`
+	// @inject_tag: db:"department_string" select_func:"get_department_string" func_arg_name:"department_id" ignore:"y"
+	DepartmentString string `protobuf:"bytes,28,opt,name=department_string,json=departmentString,proto3" json:"department_string,omitempty" db:"department_string" select_func:"get_department_string" func_arg_name:"department_id" ignore:"y"`
+	// @inject_tag: db:"cost_center_string" select_func:"get_cost_center" func_arg_name:"cost_center_id" ignore:"y"
+	CostCenterString string `protobuf:"bytes,29,opt,name=cost_center_string,json=costCenterString,proto3" json:"cost_center_string,omitempty" db:"cost_center_string" select_func:"get_cost_center" func_arg_name:"cost_center_id" ignore:"y"`
+	// @inject_tag: db:"activity_log_string" select_func:"get_txn_activity_string" func_arg_name:"id" ignore:"y"
+	ActivityLogString string `protobuf:"bytes,30,opt,name=activity_log_string,json=activityLogString,proto3" json:"activity_log_string,omitempty" db:"activity_log_string" select_func:"get_txn_activity_string" func_arg_name:"id" ignore:"y"`
+	// inject_tag: db:"txn_document_string" select_func:"get_txn_document_string" func_arg_name:"id" ignore:"y"
+	// string documents_string = 31;
+	NotEquals []string `protobuf:"bytes,31,rep,name=not_equals,json=notEquals,proto3" json:"not_equals,omitempty"`
+	// @inject_tag: multi_value:"y" name:"department_id" ignore:"y"
+	DepartmentIdList string `protobuf:"bytes,32,opt,name=department_id_list,json=departmentIdList,proto3" json:"department_id_list,omitempty" multi_value:"y" name:"department_id" ignore:"y"`
+	// @inject_tag: db:"vendor_category" multi_value:"y" nullable:"y"
+	VendorCategory string `protobuf:"bytes,33,opt,name=vendor_category,json=vendorCategory,proto3" json:"vendor_category,omitempty" db:"vendor_category" multi_value:"y" nullable:"y"`
+	WithoutLimit   bool   `protobuf:"varint,34,opt,name=without_limit,json=withoutLimit,proto3" json:"without_limit,omitempty"`
+	// @inject_tag: db:"assigned_employee_id" nullable:"y"
+	AssignedEmployeeId int32 `protobuf:"varint,35,opt,name=assigned_employee_id,json=assignedEmployeeId,proto3" json:"assigned_employee_id,omitempty" db:"assigned_employee_id" nullable:"y"`
+	// @inject_tag: db:"assigned_employee_name" select_func:"name_of_user" func_arg_name:"assigned_employee_id" ignore:"y"
+	AssignedEmployeeName string `protobuf:"bytes,36,opt,name=assigned_employee_name,json=assignedEmployeeName,proto3" json:"assigned_employee_name,omitempty" db:"assigned_employee_name" select_func:"name_of_user" func_arg_name:"assigned_employee_id" ignore:"y"`
 }
 type Task struct {
 	// @inject_tag: db:"task_id " primary_key:"y"
