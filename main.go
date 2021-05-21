@@ -56,7 +56,7 @@ func BuildDeleteQuery(target string, source interface{}) (string, []interface{},
 	var builder strings.Builder
 
 	if _, hasIsActive := reflectedValue.Type().FieldByName("IsActive"); hasIsActive {
-		fmt.Fprintf(&builder, "UPDATE %s SET %s.is_active = :is_active WHERE ", target, target)
+		fmt.Fprintf(&builder, "UPDATE %s SET %s.is_active = 0 WHERE ", target, target)
 	} else {
 		fmt.Fprintf(&builder, "DELETE FROM %s WHERE ", target)
 	}
