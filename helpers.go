@@ -229,6 +229,7 @@ func isEmptySlice(v reflect.Value) bool {
 func (qb *queryBuilder) handleDateRange(target string, t *reflect.Value) {
 	var dateTarget string
 
+	println("handling date range")
 	dateRange := t.FieldByName("DateRange")
 	dateTargetField := t.FieldByName("DateTarget")
 	canIntefaceDateTarget := dateTargetField.IsValid() && dateTargetField.CanInterface()
@@ -247,11 +248,11 @@ func (qb *queryBuilder) handleDateRange(target string, t *reflect.Value) {
 					for i := 0; i < dateRange.Len(); i = i + 2 {
 						fmt.Fprintf(
 							&qb.Predicate,
-							" AND %s.%s %s '%v'",
+							" AND %s.%s %s %v",
 							target,
 							dateTarget,
 							dateRange.Index(i),
-							dateRange.Index(i + 1),
+							processDateRangeField(dateRange.Index(i + 1)),
 						)
 					}
 				}
@@ -276,6 +277,20 @@ func (qb *queryBuilder) handleDateRange(target string, t *reflect.Value) {
 			}
 		}
 	}
+}
+
+func processDateRangeField(val reflect.Value) string {
+	var dateStr string
+	if strings.Contains(val.String(), "(") {
+		dateStr = val.String()
+	} else {
+		dateStr = "'" + val.String() + "'"
+	}
+	testStr := strings.ToLower(dateStr)
+	if strings.Contains(testStr, "select") || strings.Contains(testStr, "update") || strings.Contains(testStr, "create") || strings.Contains(testStr, "insert") {
+		panic("someone is sql injecting us")
+	}
+	return dateStr
 }
 
 func (qb *queryBuilder) handleForeignKey(f *field) {

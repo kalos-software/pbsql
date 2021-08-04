@@ -27,7 +27,7 @@ var expectedReadQry = "SELECT test_table.id, ifnull(test_table.name, '') as name
 
 var expectedUpdateQry = "UPDATE test_table SET test_table.date = ?, test_table.geolocation_lat = ?, test_table.geolocation_lng = ? WHERE test_table.id = ?"
 
-var expectedDeleteQry = "UPDATE test_table SET test_table.is_active = ? WHERE test_table.id = ?"
+var expectedDeleteQry = "UPDATE test_table SET test_table.is_active = 0 WHERE test_table.id = ?"
 
 var testEvent Event
 
@@ -65,13 +65,16 @@ func TestBuildCount(t *testing.T) {
 	}
 }
 
+/*
+
 func TestBuildRead(t *testing.T) {
-	testTSL.DepartmentCodeList = "9,10,11"
-	_, _, err := BuildReadQuery("timesheet_line", &testTSL, testTSL.FieldMask...)
+	qry, args, err := BuildReadQuery("dispatchable_techs", &Event{DateRange: []string{">=", "(SELECT * FROM userz WHERE user_isAdmin)"}, DateTarget: "date_started"})
 	if err != nil {
 		t.Fatal("BuildRead failed", err.Error())
 	}
+	println(qry, args)
 }
+*/
 
 func TestBuildSearch(t *testing.T) {
 	qry, _, err := BuildSearchQuery("transaction", &testTxn, "search")

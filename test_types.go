@@ -170,6 +170,7 @@ type Event struct {
 	XXX_unrecognized     []byte             `json:"-"`
 	XXX_sizecache        int32              `json:"-"`
 	DateRange 					 []string           `date_target:"date_started"`
+	DateTarget 					 string           	
 }
 
 type Property struct {
@@ -592,4 +593,39 @@ type TimesheetLine struct {
 	OrderDir       string   `protobuf:"bytes,28,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
 	GroupBy        string   `protobuf:"bytes,29,opt,name=group_by,json=groupBy,proto3" json:"group_by,omitempty"`
 	DepartmentCodeList string `protobuf:"varint,6,opt,name=department_code_list,json=departmentCodeList,proto3" json:"department_code_list,omitempty" multi_value:"y" db:"department_code" ignore:"y"`
+}
+
+type DispatchableTech struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// @inject_tag: db:"user_id"
+	UserId int32 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty" db:"user_id"`
+	// @inject_tag: db:"techname" nullable:"y"
+	Techname string `protobuf:"bytes,2,opt,name=techname,proto3" json:"techname,omitempty" db:"techname" nullable:"y"`
+	// @inject_tag: db:"job_type" nullable:"y"
+	JobType string `protobuf:"bytes,3,opt,name=job_type,json=jobType,proto3" json:"job_type,omitempty" db:"job_type" nullable:"y"`
+	// @inject_tag: db:"user_phone" nullable:"y"
+	UserPhone string `protobuf:"bytes,4,opt,name=user_phone,json=userPhone,proto3" json:"user_phone,omitempty" db:"user_phone" nullable:"y"`
+	// @inject_tag: db:"user_email" nullable:"y"
+	UserEmail string `protobuf:"bytes,5,opt,name=user_email,json=userEmail,proto3" json:"user_email,omitempty" db:"user_email" nullable:"y"`
+	// @inject_tag: db:"event_id" nullable:"y"
+	EventId int32 `protobuf:"varint,6,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty" db:"event_id" nullable:"y"`
+	// @inject_tag: db:"property_user_id" nullable:"y"
+	PropertyUserId int32 `protobuf:"varint,7,opt,name=property_user_id,json=propertyUserId,proto3" json:"property_user_id,omitempty" db:"property_user_id" nullable:"y"`
+	// @inject_tag: db:"property_id" nullable:"y"
+	PropertyId int32 `protobuf:"varint,8,opt,name=property_id,json=propertyId,proto3" json:"property_id,omitempty" db:"property_id" nullable:"y"`
+	// @inject_tag: db:"property_city" nullable:"y"
+	PropertyCity string `protobuf:"bytes,9,opt,name=property_city,json=propertyCity,proto3" json:"property_city,omitempty" db:"property_city" nullable:"y"`
+	// @inject_tag: db:"geolocation_lat" nullable:"y"
+	GeolocationLat float64 `protobuf:"fixed64,10,opt,name=geolocation_lat,json=geolocationLat,proto3" json:"geolocation_lat,omitempty" db:"geolocation_lat" nullable:"y"`
+	// @inject_tag: db:"geolocation_lng" nullable:"y"
+	GeolocationLng float64 `protobuf:"fixed64,11,opt,name=geolocation_lng,json=geolocationLng,proto3" json:"geolocation_lng,omitempty" db:"geolocation_lng" nullable:"y"`
+	// @inject_tag: db:"activity"
+	Activity string `protobuf:"bytes,12,opt,name=activity,proto3" json:"activity,omitempty" db:"activity"`
+	// @inject_tag: db:"activity_date" nullable:"y"
+	ActivityDate string   `protobuf:"bytes,13,opt,name=activity_date,json=activityDate,proto3" json:"activity_date,omitempty" db:"activity_date" nullable:"y"`
+	FieldMask    []string `protobuf:"bytes,14,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
+	PageNumber   int32    `protobuf:"varint,15,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
 }
