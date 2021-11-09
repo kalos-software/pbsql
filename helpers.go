@@ -228,8 +228,6 @@ func isEmptySlice(v reflect.Value) bool {
 
 func (qb *queryBuilder) handleDateRange(target string, t *reflect.Value) {
 	var dateTarget string
-
-	println("handling date range")
 	dateRange := t.FieldByName("DateRange")
 	dateTargetField := t.FieldByName("DateTarget")
 	canIntefaceDateTarget := dateTargetField.IsValid() && dateTargetField.CanInterface()
