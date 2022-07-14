@@ -2,7 +2,6 @@ package pbsql
 
 import (
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 
@@ -235,7 +234,6 @@ func BuildUpdateQuery(target string, source interface{}, fieldMask []string) (st
 		field := parseReflection(reflectedValue, i, target)
 
 		if field.value.CanInterface() && field.name != "" {
-			log.Println("in field mask", findInMask(fieldMask, field.self.Name))
 			if field.isPrimaryKey {
 				fmt.Fprintf(&qb.Predicate, "WHERE %s.%s = :%s", target, field.name, field.name)
 			} else if findInMask(fieldMask, field.self.Name) && !field.shouldIgnore && field.value.CanInterface() {

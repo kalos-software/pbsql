@@ -65,16 +65,6 @@ func TestBuildCount(t *testing.T) {
 	}
 }
 
-/*
-
-func TestBuildRead(t *testing.T) {
-	qry, args, err := BuildReadQuery("dispatchable_techs", &Event{DateRange: []string{">=", "(SELECT * FROM userz WHERE user_isAdmin)"}, DateTarget: "date_started"})
-	if err != nil {
-		t.Fatal("BuildRead failed", err.Error())
-	}
-	println(qry, args)
-}
-*/
 
 func TestBuildSearch(t *testing.T) {
 	qry, _, err := BuildSearchQuery("transaction", &testTxn, "search")
