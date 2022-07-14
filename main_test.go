@@ -40,12 +40,12 @@ var testTask Task
 var testTSL TimesheetLine
 
 func TestMain(m *testing.M) {
-	target.ID = 1
-	target.Date = "2019-01-01"
+	target.ID = 0
+	target.Date = ""
 	target.GeoLat = 123.456
 	target.GeoLng = 654.321
 	target.IsActive = 0 
-	target.OrderBy = "id"
+	target.OrderBy = ""
 	os.Exit(m.Run())
 }
 
@@ -93,11 +93,13 @@ func TestBuildRelatedReadQuery(t *testing.T) {
 }
 
 func TestBuildUpdate(t *testing.T) {
-	fieldMask := []string{}
-	_, _, err := BuildUpdateQuery("test_table", &target, fieldMask)
+	fieldMask := []string{"is_active"}
+	log.Println(&target)
+	res, _, err := BuildUpdateQuery("test_table", &target, fieldMask)
 	if err != nil {
 		t.Fatal("BuildUpdateQuery failed", err)
 	}
+	log.Println(res)
 	/*
 	if qry != expectedUpdateQry {
 		t.Log("Got:", qry)

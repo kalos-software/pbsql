@@ -2,6 +2,7 @@ package pbsql
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 	"strings"
 
@@ -220,6 +221,7 @@ func BuildReadQueryWithNotList(target string, source interface{}, notList []stri
 	result := qb.getReadResult(target, &reflectedValue)
 	return sqlx.Named(result, source)
 }
+
 // BuildUpdateQuery accepts a target table name `target`, a struct `source`, and a list of struct fields `fieldMask`
 // and attempts to build a valid sql update statement for use with sqlx.Named, ignoring any struct fields not present
 // in `fieldMask`. Struct fields must also be tagged with `db:""`, and the primary key should be tagged as
@@ -233,9 +235,10 @@ func BuildUpdateQuery(target string, source interface{}, fieldMask []string) (st
 		field := parseReflection(reflectedValue, i, target)
 
 		if field.value.CanInterface() && field.name != "" {
+			log.Println("in field mask", findInMask(fieldMask, field.self.Name))
 			if field.isPrimaryKey {
 				fmt.Fprintf(&qb.Predicate, "WHERE %s.%s = :%s", target, field.name, field.name)
-			} else if findInMask(fieldMask, field.self.Name) && !field.shouldIgnore || field.value.CanInterface() && notDefault(field.typeStr, field.value.Interface()) {
+			} else if findInMask(fieldMask, field.self.Name) && !field.shouldIgnore && field.value.CanInterface() {
 				fmt.Fprintf(&qb.Core, "%s.%s = :%s, ", target, field.name, field.name)
 			}
 		}

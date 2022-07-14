@@ -398,6 +398,8 @@ func getDefault(typeName string, fieldName string) string {
 
 func findInMask(fieldMask []string, field string) bool {
 	for _, v := range fieldMask {
+		v = strings.ToLower(strings.ReplaceAll(v, "_", ""))
+		field = strings.ToLower(strings.ReplaceAll(field, "_", ""))
 		if v == field {
 			return true
 		}
