@@ -7,44 +7,44 @@ import (
 	"strings"
 )
 
-const nullSelectField = "ifnull(%s.%s, %s) as %s, "
-const selectField = "%s.%s, "
-const selectFuncField = "ifnull(%s(%s.%s), %s) as %s, "
-const andPredicate = " AND %s.%s"
-const orPredicate = " OR %s.%s"
+const nullSelectField = "ifnull(`%s`.`%s`, %s) as %s, "
+const selectField = "`%s`.`%s`, "
+const selectFuncField = "ifnull(%s(`%s`.`%s`), %s) as %s, "
+const andPredicate = " AND `%s`.`%s`"
+const orPredicate = " OR `%s`.`%s`"
 const strComparison = " LIKE :%s"
 const notStrComparison = " NOT LIKE :%s"
 const valComparison = " = :%s"
 const notValComparison = " != :%s"
 const queryCore = "%sFROM %s%s%s"
 const isoDateFormat = "2006-01-02 15:04:05"
+
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
-var matchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
+var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
 
 type field struct {
-	value reflect.Value
-	self reflect.StructField
-	typeStr string
-	table string
-	isNullable bool
-	shouldIgnore bool
-	isPrimaryKey bool
-	hasForeignKey bool
-	hasSelectFunc bool
+	value          reflect.Value
+	self           reflect.StructField
+	typeStr        string
+	table          string
+	isNullable     bool
+	shouldIgnore   bool
+	isPrimaryKey   bool
+	hasForeignKey  bool
+	hasSelectFunc  bool
 	selectFuncName string
-	dateTarget string
-	dateRange []string
-	selectFunc *selectFuncData
-	isMultiValue bool
-	name string
+	dateTarget     string
+	dateRange      []string
+	selectFunc     *selectFuncData
+	isMultiValue   bool
+	name           string
 }
 
 type selectFuncData struct {
-	ok bool
-	name string
+	ok      bool
+	name    string
 	argName string
 }
-
 
 func parseReflection(val reflect.Value, i int, target string) *field {
 	self := val.Type().Field(i)
@@ -57,31 +57,30 @@ func parseReflection(val reflect.Value, i int, target string) *field {
 
 	selectFuncName := self.Tag.Get("select_func")
 	selectFunc := &selectFuncData{
-		ok: selectFuncName != "",
-		name: selectFuncName,
+		ok:      selectFuncName != "",
+		name:    selectFuncName,
 		argName: self.Tag.Get("func_arg_name"),
 	}
 
-
 	return &field{
-		value: value,
-		table: target,
-		self: self,
-		typeStr: value.Type().Name(),
-		isNullable: self.Tag.Get("nullable") == "y",
-		isPrimaryKey: self.Tag.Get("primary_key") != "",
-		shouldIgnore: self.Tag.Get("ignore") != "",
+		value:         value,
+		table:         target,
+		self:          self,
+		typeStr:       value.Type().Name(),
+		isNullable:    self.Tag.Get("nullable") == "y",
+		isPrimaryKey:  self.Tag.Get("primary_key") != "",
+		shouldIgnore:  self.Tag.Get("ignore") != "",
 		hasForeignKey: foreignKey != "",
-		isMultiValue: self.Tag.Get("multi_value") != "",
-		selectFunc: selectFunc,
-		name: name,
+		isMultiValue:  self.Tag.Get("multi_value") != "",
+		selectFunc:    selectFunc,
+		name:          name,
 	}
 }
 
 /** Field Tags
 * __________________
 * Standard Group    |
-* db                | corresponding database property name 
+* db                | corresponding database property name
 * nullable          | y \ n if the field could be a null value
 * primary_key       | y \ n if the field is the primary key of a table
 * ignore            | y \ n if the field should be ignored (edge case)
@@ -99,12 +98,12 @@ func parseReflection(val reflect.Value, i int, target string) *field {
 **/
 
 type queryBuilder struct {
-	Core strings.Builder
-	Joins strings.Builder
-	Fields strings.Builder
+	Core      strings.Builder
+	Joins     strings.Builder
+	Fields    strings.Builder
 	Predicate strings.Builder
-	Columns strings.Builder
-	Values strings.Builder
+	Columns   strings.Builder
+	Values    strings.Builder
 }
 
 func (qb *queryBuilder) writeSelectField(f *field) {
@@ -125,12 +124,12 @@ func (qb *queryBuilder) writePredicate(f *field, fieldMask []string, predicateSt
 		if f.isMultiValue && !f.value.IsZero() {
 			fmt.Fprintf(&qb.Predicate, " IN (%s)", f.value)
 		} else {
-		if f.typeStr == "string" {
-			fmt.Fprintf(&qb.Predicate, strComparison, f.name)
-		} else {
-			fmt.Fprintf(&qb.Predicate,  valComparison, f.name)
+			if f.typeStr == "string" {
+				fmt.Fprintf(&qb.Predicate, strComparison, f.name)
+			} else {
+				fmt.Fprintf(&qb.Predicate, valComparison, f.name)
+			}
 		}
-	}
 	}
 }
 
@@ -140,12 +139,12 @@ func (qb *queryBuilder) writeNotPredicate(f *field, fieldMask []string, predicat
 		if f.isMultiValue {
 			fmt.Fprintf(&qb.Predicate, " NOT IN (%s)", f.value)
 		} else {
-		if f.typeStr == "string" {
-			fmt.Fprintf(&qb.Predicate, notStrComparison, f.name)
-		} else {
-			fmt.Fprintf(&qb.Predicate,  notValComparison, f.name)
+			if f.typeStr == "string" {
+				fmt.Fprintf(&qb.Predicate, notStrComparison, f.name)
+			} else {
+				fmt.Fprintf(&qb.Predicate, notValComparison, f.name)
+			}
 		}
-	}
 	}
 }
 
@@ -167,7 +166,7 @@ func (qb *queryBuilder) getReadResult(table string, v *reflect.Value) string {
 
 func (qb *queryBuilder) getUpdateResult() string {
 	qb.Core.WriteString(qb.Predicate.String())
-	return strings.Replace(qb.Core.String(), ", WHERE", " WHERE", 1)	
+	return strings.Replace(qb.Core.String(), ", WHERE", " WHERE", 1)
 }
 
 func (qb *queryBuilder) handleGroupBy(v *reflect.Value) {
@@ -181,7 +180,7 @@ func (qb *queryBuilder) handleGroupBy(v *reflect.Value) {
 func (qb *queryBuilder) handleOrder(v *reflect.Value) {
 	orderBy := v.FieldByName("OrderBy")
 	orderDir := v.FieldByName("OrderDir")
-	
+
 	if orderBy.CanAddr() && orderBy.String() != "" {
 		orderStr := fmt.Sprintf(" order by %s", orderBy.String())
 		if orderDir.CanAddr() && orderDir.String() != "" {
@@ -197,11 +196,11 @@ func (qb *queryBuilder) handleOrder(v *reflect.Value) {
 				foreignKey := field.self.Tag.Get("foreign_key")
 				foreignTable := field.self.Tag.Get("foreign_table")
 				localName := field.self.Tag.Get("local_name")
-			
+
 				if localName == "" {
 					localName = foreignKey
 				}
-			
+
 				related := reflect.Indirect(field.value)
 				if related.CanAddr() && foreignKey != "" && foreignTable != "" {
 					orderBy := related.FieldByName("OrderBy")
@@ -236,9 +235,9 @@ func (qb *queryBuilder) handleDateRange(target string, t *reflect.Value) {
 			if isEmptySlice(dateTargetField) || dateTargetField.Kind() == reflect.String {
 				dateTarget = dateTargetField.String()
 				if dateTarget == "" || dateTargetField.Kind() == reflect.Slice {
-					dateRangeTypeField, ok := t.Type().FieldByName("DateRange");
+					dateRangeTypeField, ok := t.Type().FieldByName("DateRange")
 					if ok {
-						dateTarget = dateRangeTypeField.Tag.Get("date_target");
+						dateTarget = dateRangeTypeField.Tag.Get("date_target")
 					}
 				}
 
@@ -250,12 +249,12 @@ func (qb *queryBuilder) handleDateRange(target string, t *reflect.Value) {
 							target,
 							dateTarget,
 							dateRange.Index(i),
-							processDateRangeField(dateRange.Index(i + 1)),
+							processDateRangeField(dateRange.Index(i+1)),
 						)
 					}
 				}
 			} else {
-				dateTargetSlice :=  dateTargetField.Interface().([]string)
+				dateTargetSlice := dateTargetField.Interface().([]string)
 				if len(dateTargetSlice) != 0 {
 					for i := 0; i < dateRange.Len(); i = i + 2 {
 						j := 0
@@ -268,7 +267,7 @@ func (qb *queryBuilder) handleDateRange(target string, t *reflect.Value) {
 							target,
 							dateTargetSlice[j],
 							dateRange.Index(i),
-							dateRange.Index(i + 1),
+							dateRange.Index(i+1),
 						)
 					}
 				}
@@ -304,7 +303,7 @@ func (qb *queryBuilder) handleForeignKey(f *field) {
 	if related.CanAddr() && foreignKey != "" && foreignTable != "" {
 		for j := 0; j < related.NumField(); j++ {
 			field := parseReflection(related, j, foreignTable)
-			
+
 			if field.name != "" && field.value.CanInterface() && notDefault(field.typeStr, field.value.Interface()) {
 				fmt.Fprintf(&qb.Predicate, " AND %s.%s", field.table, field.name)
 				if field.typeStr == "string" {
@@ -319,12 +318,12 @@ func (qb *queryBuilder) handleForeignKey(f *field) {
 			" LEFT JOIN %s on %s.%s = %s.%s",
 			foreignTable,
 			foreignTable,
-			foreignKey, 
-			f.table, 
+			foreignKey,
+			f.table,
 			localName,
 		)
 	}
-	if  related.IsValid() {
+	if related.IsValid() {
 		qb.handleDateRange(foreignTable, &related)
 	}
 }
@@ -347,16 +346,16 @@ func notDefault(typeName string, fieldVal interface{}) bool {
 		return fieldVal.(uint64) != 0
 	case "int8":
 		return fieldVal.(int8) != 0
-	case "int16": 
+	case "int16":
 		return fieldVal.(int16) != 0
 	case "int32":
 		return fieldVal.(int32) != 0
-	case	"int64":
+	case "int64":
 		return fieldVal.(int64) != 0
 	case "byte":
 		return fieldVal.(byte) != 0
 	case "rune":
-		return fieldVal.(rune) != 0 
+		return fieldVal.(rune) != 0
 	case "uintptr":
 		return fieldVal.(uintptr) != 0
 	case "float32":
@@ -364,9 +363,9 @@ func notDefault(typeName string, fieldVal interface{}) bool {
 	case "float64":
 		return fieldVal.(float64) != 0.0
 	case "complex64":
-		return fieldVal.(complex64) != (0+0i)
+		return fieldVal.(complex64) != (0 + 0i)
 	case "complex128":
-		return fieldVal.(complex128) != (0+0i)
+		return fieldVal.(complex128) != (0 + 0i)
 	case "string":
 		return fieldVal.(string) != ""
 	case "bool":
@@ -408,9 +407,9 @@ func findInMask(fieldMask []string, field string) bool {
 }
 
 func toSnakeCase(str string) string {
-  snake := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
-  snake  = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
-  return strings.ToLower(snake)
+	snake := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
+	snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
+	return strings.ToLower(snake)
 }
 
 func getSearchArgs(n int, searchPhrase string) []interface{} {
