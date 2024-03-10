@@ -16,7 +16,7 @@ const strComparison = " LIKE :%s"
 const notStrComparison = " NOT LIKE :%s"
 const valComparison = " = :%s"
 const notValComparison = " != :%s"
-const queryCore = "%sFROM %s%s%s"
+const queryCore = "%sFROM `%s`%s%s"
 const isoDateFormat = "2006-01-02 15:04:05"
 
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
