@@ -25,8 +25,8 @@ func BuildCreateQuery(target string, source interface{}) (string, []interface{},
 
 	for i := 0; i < t.NumField(); i++ {
 		field := parseReflection(t, i, target)
-		if (field.value.CanInterface()) {
-			if notDefault(field.typeStr, field.value.Interface()) && field.name != "" && !field.isPrimaryKey {
+		if field.value.CanInterface() {
+			if notDefault(field.typeStr, field.value.Interface()) && field.name != "" {
 				if i != 0 {
 					qb.Columns.WriteString(", ")
 					qb.Values.WriteString(", ")
@@ -72,7 +72,6 @@ func BuildDeleteQuery(target string, source interface{}) (string, []interface{},
 	return sqlx.Named(builder.String(), source)
 }
 
-
 // BuildSearchQuery builds a search query
 func BuildSearchQuery(target string, source interface{}, searchPhrase string) (string, []interface{}, error) {
 	var qb queryBuilder
@@ -85,19 +84,19 @@ func BuildSearchQuery(target string, source interface{}, searchPhrase string) (s
 
 	for i := 0; i < n; i++ {
 		field := parseReflection(reflectedValue, i, target)
-			if field.selectFunc.ok {
-				field.shouldIgnore = true
+		if field.selectFunc.ok {
+			field.shouldIgnore = true
+		}
+		fields = append(fields, field)
+		if field.name != "" && !field.shouldIgnore {
+			if field.typeStr == "string" && field.value.String() == "" {
+				fieldMask = append(fieldMask, field.self.Name)
+			} else if field.value.CanAddr() {
+				qb.writePredicate(field, fieldMask, andPredicate)
 			}
-			fields = append(fields, field)
-			if field.name != "" && !field.shouldIgnore {
-				if field.typeStr == "string" && field.value.String() == "" {
-					fieldMask = append(fieldMask, field.self.Name)
-				} else if field.value.CanAddr() {
-					qb.writePredicate(field, fieldMask, andPredicate)
-				}
-			} else if field.selectFunc.ok {
-				qb.writeSelectFunc(field)
-			}
+		} else if field.selectFunc.ok {
+			qb.writeSelectFunc(field)
+		}
 	}
 
 	qb.Predicate.WriteString(" AND (")
@@ -119,7 +118,7 @@ func BuildSearchQuery(target string, source interface{}, searchPhrase string) (s
 	/* here we choose to use the args returned from BuildReadQuery*/
 	qry, falseArgs, err := sqlx.Named(qb.getReadResult(target, &reflectedValue), source)
 	_, altArgs, _ := BuildReadQuery(target, source)
-	searchArgs := getSearchArgs(len(falseArgs) - len(altArgs), searchPhrase)
+	searchArgs := getSearchArgs(len(falseArgs)-len(altArgs), searchPhrase)
 	return qry, append(altArgs, searchArgs...), err
 }
 
@@ -155,7 +154,7 @@ func BuildReadQuery(target string, source interface{}, fieldMask ...string) (str
 	var qb queryBuilder
 	qb.Core.WriteString("SELECT ")
 	qb.Predicate.WriteString(" WHERE true")
-	
+
 	for i := 0; i < reflectedValue.NumField(); i++ {
 		field := parseReflection(reflectedValue, i, target)
 		if field.name != "" {
@@ -166,7 +165,7 @@ func BuildReadQuery(target string, source interface{}, fieldMask ...string) (str
 				}
 			} else if field.selectFunc.ok {
 				qb.writeSelectFunc(field)
-			} else if field.isMultiValue && field.value.CanAddr(){
+			} else if field.isMultiValue && field.value.CanAddr() {
 				qb.writePredicate(field, fieldMask, andPredicate)
 			}
 		}
@@ -189,7 +188,7 @@ func BuildReadQueryWithNotList(target string, source interface{}, notList []stri
 	var qb queryBuilder
 	qb.Core.WriteString("SELECT ")
 	qb.Predicate.WriteString(" WHERE true")
-	
+
 	for i := 0; i < reflectedValue.NumField(); i++ {
 		field := parseReflection(reflectedValue, i, target)
 		if field.name != "" {
@@ -204,7 +203,7 @@ func BuildReadQueryWithNotList(target string, source interface{}, notList []stri
 				}
 			} else if field.selectFunc.ok {
 				qb.writeSelectFunc(field)
-			}else if field.isMultiValue && field.value.CanAddr(){
+			} else if field.isMultiValue && field.value.CanAddr() {
 				if findInMask(notList, field.self.Name) {
 					qb.writeNotPredicate(field, notList, andPredicate)
 				} else {
@@ -219,6 +218,51 @@ func BuildReadQueryWithNotList(target string, source interface{}, notList []stri
 	qb.handleDateRange(target, &reflectedValue)
 	result := qb.getReadResult(target, &reflectedValue)
 	return sqlx.Named(result, source)
+}
+
+type ReadQuery struct {
+	Target    string
+	Source    interface{}
+	NotList   []string
+	FieldMask []string
+	Collate   bool
+}
+
+func (rq *ReadQuery) Build() (string, []interface{}, error) {
+	reflectedValue := reflect.ValueOf(rq.Source).Elem()
+	var qb queryBuilder
+	qb.Core.WriteString("SELECT ")
+	qb.Predicate.WriteString(" WHERE true")
+
+	for i := 0; i < reflectedValue.NumField(); i++ {
+		field := parseReflection(reflectedValue, i, rq.Target)
+		if field.name != "" {
+			if !field.shouldIgnore && !field.selectFunc.ok {
+				qb.writeSelectField(field)
+				if field.value.CanAddr() {
+					if findInMask(rq.NotList, field.self.Name) {
+						qb.writeNotPredicate(field, rq.NotList, andPredicate)
+					} else {
+						qb.writePredicate(field, rq.FieldMask, andPredicate)
+					}
+				}
+			} else if field.selectFunc.ok {
+				qb.writeSelectFunc(field)
+			} else if field.isMultiValue && field.value.CanAddr() {
+				if findInMask(rq.NotList, field.self.Name) {
+					qb.writeNotPredicate(field, rq.NotList, andPredicate)
+				} else {
+					qb.writePredicate(field, rq.FieldMask, andPredicate)
+				}
+			}
+		}
+		if field.hasForeignKey {
+			qb.handleForeignKey(field)
+		}
+	}
+	qb.handleDateRange(rq.Target, &reflectedValue)
+	result := qb.getReadResult(rq.Target, &reflectedValue)
+	return sqlx.Named(result, rq.Source)
 }
 
 // BuildUpdateQuery accepts a target table name `target`, a struct `source`, and a list of struct fields `fieldMask`
@@ -279,6 +323,6 @@ func BuildRelatedReadQuery(source interface{}, foreignKey string, foreignValue i
 			}
 		}
 	}
-	
+
 	return strings.Replace(qb.Core.String(), ", FROM", " FROM", 1)
 }
