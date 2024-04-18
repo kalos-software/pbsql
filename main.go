@@ -220,7 +220,7 @@ func BuildReadQueryWithNotList(target string, source interface{}, notList []stri
 	return sqlx.Named(result, source)
 }
 
-type ReadQuery struct {
+type Query struct {
 	Target    string
 	Source    interface{}
 	NotList   []string
@@ -228,31 +228,31 @@ type ReadQuery struct {
 	Collate   bool
 }
 
-func (rq *ReadQuery) Build() (string, []interface{}, error) {
-	reflectedValue := reflect.ValueOf(rq.Source).Elem()
+func (q *Query) BuildRead() (string, []interface{}, error) {
+	reflectedValue := reflect.ValueOf(q.Source).Elem()
 	var qb queryBuilder
 	qb.Core.WriteString("SELECT ")
 	qb.Predicate.WriteString(" WHERE true")
 
 	for i := 0; i < reflectedValue.NumField(); i++ {
-		field := parseReflection(reflectedValue, i, rq.Target)
+		field := parseReflection(reflectedValue, i, q.Target)
 		if field.name != "" {
 			if !field.shouldIgnore && !field.selectFunc.ok {
 				qb.writeSelectField(field)
 				if field.value.CanAddr() {
-					if findInMask(rq.NotList, field.self.Name) {
-						qb.writeNotPredicate(field, rq.NotList, andPredicate)
+					if findInMask(q.NotList, field.self.Name) {
+						qb.writeNotPredicate(field, q.NotList, andPredicate)
 					} else {
-						qb.writePredicate(field, rq.FieldMask, andPredicate)
+						qb.writePredicate(field, q.FieldMask, andPredicate)
 					}
 				}
 			} else if field.selectFunc.ok {
 				qb.writeSelectFunc(field)
 			} else if field.isMultiValue && field.value.CanAddr() {
-				if findInMask(rq.NotList, field.self.Name) {
-					qb.writeNotPredicate(field, rq.NotList, andPredicate)
+				if findInMask(q.NotList, field.self.Name) {
+					qb.writeNotPredicate(field, q.NotList, andPredicate)
 				} else {
-					qb.writePredicate(field, rq.FieldMask, andPredicate)
+					qb.writePredicate(field, q.FieldMask, andPredicate)
 				}
 			}
 		}
@@ -260,9 +260,9 @@ func (rq *ReadQuery) Build() (string, []interface{}, error) {
 			qb.handleForeignKey(field)
 		}
 	}
-	qb.handleDateRange(rq.Target, &reflectedValue)
-	result := qb.getReadResult(rq.Target, &reflectedValue)
-	return sqlx.Named(result, rq.Source)
+	qb.handleDateRange(q.Target, &reflectedValue)
+	result := qb.getReadResult(q.Target, &reflectedValue)
+	return sqlx.Named(result, q.Source)
 }
 
 // BuildUpdateQuery accepts a target table name `target`, a struct `source`, and a list of struct fields `fieldMask`
