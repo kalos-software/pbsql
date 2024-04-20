@@ -92,6 +92,25 @@ func (s *Service) Create(ctx context.Context, req *User) (*User, error) {
 }
 ```
 
+### Collation
+To force collation of particular field, you can add `collation` tag with collation name as the value, e.g. `collation:"utf8mb4_0900_ai_ci"`.
+The internal default collation is `utf8mb4_0900_ai_ci` so to use that collation we can simply define `collation:"default"` and the marked field will use `utf8mb4_0900_ai_ci`. 
+
+Example:
+```
+type Task struct {
+	..... 
+
+	// @inject_tag: db:"date_performed" nullable:"y" collation:"default"
+	DatePerformed string `protobuf:"bytes,30,opt,name=date_performed,json=datePerformed,proto3" json:"date_performed,omitempty" db:"date_performed" nullable:"y" collation:"default"`
+	// @inject_tag: db:"spiff_tool_id" nullable:"y"
+	SpiffToolId string `protobuf:"bytes,31,opt,name=spiff_tool_id,json=spiffToolId,proto3" json:"spiff_tool_id,omitempty" db:"spiff_tool_id" nullable:"y"`
+	// @inject_tag: db:"spiff_tool_closeout_date" nullable:"y" collation:"default"
+	OwnerName             string   `db:"owner_name" select_func:"name_of_user" func_arg_name:"external_id" collation:"default"`
+	.....
+}
+```
+
 ## Caveats
 
 The query builder doesn't handle any sort of limit or offset behavior, but since it returns a plain string this would be simple to implement:
