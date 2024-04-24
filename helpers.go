@@ -7,9 +7,11 @@ import (
 	"strings"
 )
 
-const nullSelectField = "ifnull(`%s`.`%s`, %s) as %s, "
+const nullSelectField = "ifnull(`%s`.`%s`, %s)%s as %s, "
 const selectField = "`%s`.`%s`, "
+const selectFieldWithCollation = "`%s`.`%s`%s as %s, "
 const selectFuncField = "ifnull(%s(`%s`.`%s`), %s) as %s, "
+const selectFuncFieldWithCollation = "ifnull(%s(`%s`.`%s`), %s)%s as %s, "
 const andPredicate = " AND `%s`.`%s`"
 const orPredicate = " OR `%s`.`%s`"
 const strComparison = " LIKE :%s"
@@ -18,6 +20,7 @@ const valComparison = " = :%s"
 const notValComparison = " != :%s"
 const queryCore = "%sFROM `%s`%s%s"
 const isoDateFormat = "2006-01-02 15:04:05"
+const defaultCollation = "utf8mb4_0900_ai_ci"
 
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
 var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
@@ -38,6 +41,7 @@ type field struct {
 	selectFunc     *selectFuncData
 	isMultiValue   bool
 	name           string
+	collation      string
 }
 
 type selectFuncData struct {
@@ -62,6 +66,11 @@ func parseReflection(val reflect.Value, i int, target string) *field {
 		argName: self.Tag.Get("func_arg_name"),
 	}
 
+	collation := self.Tag.Get("collation")
+	if collation == "default" {
+		collation = defaultCollation
+	}
+
 	return &field{
 		value:         value,
 		table:         target,
@@ -74,6 +83,7 @@ func parseReflection(val reflect.Value, i int, target string) *field {
 		isMultiValue:  self.Tag.Get("multi_value") != "",
 		selectFunc:    selectFunc,
 		name:          name,
+		collation:     collation,
 	}
 }
 
@@ -107,15 +117,28 @@ type queryBuilder struct {
 }
 
 func (qb *queryBuilder) writeSelectField(f *field) {
+	collation := f.collation
+	if collation != "" {
+		collation = " COLLATE " + collation
+	}
+
 	if f.isNullable {
-		fmt.Fprintf(&qb.Fields, nullSelectField, f.table, f.name, getDefault(f.typeStr, f.name), f.name)
+		fmt.Fprintf(&qb.Fields, nullSelectField, f.table, f.name, getDefault(f.typeStr, f.name), collation, f.name)
 	} else {
-		fmt.Fprintf(&qb.Fields, selectField, f.table, f.name)
+		if collation != "" {
+			fmt.Fprintf(&qb.Fields, selectFieldWithCollation, f.table, f.name, collation, f.name)
+		} else {
+			fmt.Fprintf(&qb.Fields, selectField, f.table, f.name)
+		}
 	}
 }
 
 func (qb *queryBuilder) writeSelectFunc(f *field) {
-	fmt.Fprintf(&qb.Fields, selectFuncField, f.selectFunc.name, f.table, f.selectFunc.argName, getDefault(f.typeStr, f.name), f.name)
+	if f.collation != "" {
+		fmt.Fprintf(&qb.Fields, selectFuncFieldWithCollation, f.selectFunc.name, f.table, f.selectFunc.argName, getDefault(f.typeStr, f.name), " COLLATE "+f.collation, f.name)
+	} else {
+		fmt.Fprintf(&qb.Fields, selectFuncField, f.selectFunc.name, f.table, f.selectFunc.argName, getDefault(f.typeStr, f.name), f.name)
+	}
 }
 
 func (qb *queryBuilder) writePredicate(f *field, fieldMask []string, predicateStr string) {

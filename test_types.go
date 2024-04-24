@@ -156,21 +156,21 @@ type Event struct {
 	// @inject_tag: db:"highPriority"
 	HighPriority int32 `protobuf:"varint,76,opt,name=high_priority,json=highPriority,proto3" json:"high_priority,omitempty" db:"highPriority"`
 	// @inject_tag: db:"isResidential"
-	IsResidential int32      `protobuf:"varint,77,opt,name=is_residential,json=isResidential,proto3" json:"is_residential,omitempty" db:"isResidential"`
-	JobType       string     `protobuf:"bytes,78,opt,name=job_type,json=jobType,proto3" json:"job_type,omitempty"`
-	JobSubtype    string     `protobuf:"bytes,79,opt,name=job_subtype,json=jobSubtype,proto3" json:"job_subtype,omitempty"`
-	Customer      *User `protobuf:"bytes,80,opt,name=customer,proto3" json:"customer,omitempty" local_name:"id" foreign_key:"id" foreign_table:"servicable2"`
+	IsResidential int32  `protobuf:"varint,77,opt,name=is_residential,json=isResidential,proto3" json:"is_residential,omitempty" db:"isResidential"`
+	JobType       string `protobuf:"bytes,78,opt,name=job_type,json=jobType,proto3" json:"job_type,omitempty"`
+	JobSubtype    string `protobuf:"bytes,79,opt,name=job_subtype,json=jobSubtype,proto3" json:"job_subtype,omitempty"`
+	Customer      *User  `protobuf:"bytes,80,opt,name=customer,proto3" json:"customer,omitempty" local_name:"id" foreign_key:"id" foreign_table:"servicable2"`
 	// @inject_tag: foreign_key:"property_id" foreign_table:"properties"
 	Property             *Property `protobuf:"bytes,81,opt,name=property,proto3" json:"property,omitempty" local_name:"property_id" foreign_key:"property_id" foreign_table:"properties"`
-	FieldMask            []string           `protobuf:"bytes,82,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
-	PageNumber           int32              `protobuf:"varint,83,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
-	OrderBy              string             `protobuf:"bytes,84,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
-	OrderDir             string             `protobuf:"bytes,85,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
-	XXX_unrecognized     []byte             `json:"-"`
-	XXX_sizecache        int32              `json:"-"`
-	DateRange 					 []string           `date_target:"date_started"`
-	DateTarget 					 string           	
+	FieldMask            []string  `protobuf:"bytes,82,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
+	PageNumber           int32     `protobuf:"varint,83,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
+	OrderBy              string    `protobuf:"bytes,84,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
+	OrderDir             string    `protobuf:"bytes,85,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
+	DateRange            []string  `date_target:"date_started"`
+	DateTarget           string
 }
 
 type Property struct {
@@ -342,13 +342,13 @@ type User struct {
 	GeolocationLng float64 `protobuf:"fixed64,58,opt,name=geolocation_lng,json=geolocationLng,proto3" json:"geolocation_lng,omitempty" db:"geolocation_lng" nullable:"y"`
 	// @inject_tag: foreign_key:"technician_user_id" foreign_table:"services_rendered" local_name:"user_id"
 	ServicesRendered     *ServicesRendered `protobuf:"bytes,63,opt,name=services_rendered,json=servicesRendered,proto3" json:"services_rendered,omitempty" foreign_key:"technician_user_id" foreign_table:"services_rendered" local_name:"user_id"`
-	FieldMask            []string                            `protobuf:"bytes,59,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
-	PageNumber           int32                               `protobuf:"varint,60,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
-	OrderBy              string                              `protobuf:"bytes,61,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
-	OrderDir             string                              `protobuf:"bytes,62,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                            `json:"-"`
-	XXX_unrecognized     []byte                              `json:"-"`
-	XXX_sizecache        int32                               `json:"-"`
+	FieldMask            []string          `protobuf:"bytes,59,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
+	PageNumber           int32             `protobuf:"varint,60,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
+	OrderBy              string            `protobuf:"bytes,61,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
+	OrderDir             string            `protobuf:"bytes,62,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
 }
 
 type ServicesRendered struct {
@@ -384,8 +384,8 @@ type ServicesRendered struct {
 	SignatureData        string   `protobuf:"bytes,15,opt,name=signature_data,json=signatureData,proto3" json:"signature_data,omitempty" db:"signatureData" nullable:"y"`
 	FieldMask            []string `protobuf:"bytes,16,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
 	PageNumber           int32    `protobuf:"varint,17,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
-	OrderBy              string                              `protobuf:"bytes,61,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
-	OrderDir             string                              `protobuf:"bytes,62,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
+	OrderBy              string   `protobuf:"bytes,61,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
+	OrderDir             string   `protobuf:"bytes,62,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -425,11 +425,11 @@ type Transaction struct {
 	// @inject_tag: db:"owner_name" select_func:"name_of_user" func_arg_name:"owner_id" ignore:"y"
 	OwnerName string `protobuf:"bytes,14,opt,name=owner_name,json=ownerName,proto3" json:"owner_name,omitempty" db:"owner_name" select_func:"name_of_user" func_arg_name:"owner_id" ignore:"y"`
 	// @inject_tag: db:"card_used" select_func:"card_by_user" func_arg_name:"owner_id" ignore:"y"
-	CardUsed    string                                      `protobuf:"bytes,15,opt,name=card_used,json=cardUsed,proto3" json:"card_used,omitempty" db:"card_used" select_func:"card_by_user" func_arg_name:"owner_id" ignore:"y"`
-	PageNumber  int32                                       `protobuf:"varint,18,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
-	FieldMask   []string                                    `protobuf:"bytes,19,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
-	OrderBy     string                                      `protobuf:"bytes,22,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
-	OrderDir    string                                      `protobuf:"bytes,23,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
+	CardUsed   string   `protobuf:"bytes,15,opt,name=card_used,json=cardUsed,proto3" json:"card_used,omitempty" db:"card_used" select_func:"card_by_user" func_arg_name:"owner_id" ignore:"y"`
+	PageNumber int32    `protobuf:"varint,18,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
+	FieldMask  []string `protobuf:"bytes,19,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
+	OrderBy    string   `protobuf:"bytes,22,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
+	OrderDir   string   `protobuf:"bytes,23,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
 	// @inject_tag: db:"is_audited"
 	IsAudited bool `protobuf:"varint,24,opt,name=is_audited,json=isAudited,proto3" json:"is_audited,omitempty" db:"is_audited"`
 	// @inject_tag: db:"is_recorded"
@@ -517,24 +517,24 @@ type Task struct {
 	ToolpurchaseFile string `protobuf:"bytes,28,opt,name=toolpurchase_file,json=toolpurchaseFile,proto3" json:"toolpurchase_file,omitempty" db:"toolpurchase_file" nullable:"y"`
 	// @inject_tag: db:"admin_action_id" nullable:"y"
 	AdminActionId int32 `protobuf:"varint,29,opt,name=admin_action_id,json=adminActionId,proto3" json:"admin_action_id,omitempty" db:"admin_action_id" nullable:"y"`
-	// @inject_tag: db:"date_performed" nullable:"y"
-	DatePerformed string `protobuf:"bytes,30,opt,name=date_performed,json=datePerformed,proto3" json:"date_performed,omitempty" db:"date_performed" nullable:"y"`
+	// @inject_tag: db:"date_performed" nullable:"y" collation:"default"
+	DatePerformed string `protobuf:"bytes,30,opt,name=date_performed,json=datePerformed,proto3" json:"date_performed,omitempty" db:"date_performed" nullable:"y" collation:"default"`
 	// @inject_tag: db:"spiff_tool_id" nullable:"y"
 	SpiffToolId string `protobuf:"bytes,31,opt,name=spiff_tool_id,json=spiffToolId,proto3" json:"spiff_tool_id,omitempty" db:"spiff_tool_id" nullable:"y"`
-	// @inject_tag: db:"spiff_tool_closeout_date" nullable:"y"
-	OwnerName string `db:"owner_name" select_func:"name_of_user" func_arg_name:"external_id"`
+	// @inject_tag: db:"spiff_tool_closeout_date" nullable:"y" collation:"default"
+	OwnerName             string   `db:"owner_name" select_func:"name_of_user" func_arg_name:"external_id" collation:"default"`
 	SpiffToolCloseoutDate string   `protobuf:"bytes,32,opt,name=spiff_tool_closeout_date,json=spiffToolCloseoutDate,proto3" json:"spiff_tool_closeout_date,omitempty" db:"spiff_tool_closeout_date" nullable:"y"`
 	FieldMask             []string `protobuf:"bytes,33,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
 	NotEquals             []string `protobuf:"bytes,54,rep,name=not_list,json=notEquals,proto3" json:"not_equals,omitempty"`
 	PageNumber            int32    `protobuf:"varint,34,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
 	// @inject_tag: date_target:"date_performed"
-	DateRange            []string                                        `protobuf:"bytes,35,rep,name=date_range,json=dateRange,proto3" json:"date_range,omitempty" date_target:"date_performed"`
-	DateTarget           string                                          `protobuf:"bytes,43,opt,name=date_target,json=dateTarget,proto3" json:"date_target,omitempty"`
-	OrderBy              string                                          `protobuf:"bytes,40,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
-	OrderDir             string                                          `protobuf:"bytes,41,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                                        `json:"-"`
-	XXX_unrecognized     []byte                                          `json:"-"`
-	XXX_sizecache        int32                                           `json:"-"`
+	DateRange            []string `protobuf:"bytes,35,rep,name=date_range,json=dateRange,proto3" json:"date_range,omitempty" date_target:"date_performed"`
+	DateTarget           string   `protobuf:"bytes,43,opt,name=date_target,json=dateTarget,proto3" json:"date_target,omitempty"`
+	OrderBy              string   `protobuf:"bytes,40,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
+	OrderDir             string   `protobuf:"bytes,41,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 	GroupBy              string
 }
 
@@ -574,9 +574,9 @@ type TimesheetLine struct {
 	// @inject_tag: db:"technician_user_id"
 	TechnicianUserId int32 `protobuf:"varint,15,opt,name=technician_user_id,json=technicianUserId,proto3" json:"technician_user_id,omitempty" db:"technician_user_id"`
 	// @inject_tag: db:"isactive" nullable:"y"
-	IsActive   int32                                   `protobuf:"varint,16,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty" db:"isactive" nullable:"y"`
-	FieldMask  []string                                `protobuf:"bytes,17,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
-	PageNumber int32                                   `protobuf:"varint,18,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
+	IsActive   int32    `protobuf:"varint,16,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty" db:"isactive" nullable:"y"`
+	FieldMask  []string `protobuf:"bytes,17,rep,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
+	PageNumber int32    `protobuf:"varint,18,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
 	// @inject_tag: date_target:"time_started"
 	DateRange  []string `protobuf:"bytes,20,rep,name=date_range,json=dateRange,proto3" json:"date_range,omitempty" date_target:"time_started"`
 	DateTarget []string `protobuf:"bytes,21,rep,name=date_target,json=dateTarget,proto3" json:"date_target,omitempty"`
@@ -587,12 +587,12 @@ type TimesheetLine struct {
 	// @inject_tag: db:"technician_user_name" select_func:"name_of_user" func_arg_name:"technician_user_id" ignore:"y"
 	TechnicianUserName string `protobuf:"bytes,24,opt,name=technician_user_name,json=technicianUserName,proto3" json:"technician_user_name,omitempty" db:"technician_user_name" select_func:"name_of_user" func_arg_name:"technician_user_id" ignore:"y"`
 	// @inject_tag: db:"department_name" select_func:"name_of_department_by_id" func_arg_name:"department_code" ignore:"y"
-	DepartmentName string   `protobuf:"bytes,25,opt,name=department_name,json=departmentName,proto3" json:"department_name,omitempty" db:"department_name" select_func:"name_of_department_by_id" func_arg_name:"department_code" ignore:"y"`
-	NotEquals      []string `protobuf:"bytes,26,rep,name=not_equals,json=notEquals,proto3" json:"not_equals,omitempty"`
-	OrderBy        string   `protobuf:"bytes,27,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
-	OrderDir       string   `protobuf:"bytes,28,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
-	GroupBy        string   `protobuf:"bytes,29,opt,name=group_by,json=groupBy,proto3" json:"group_by,omitempty"`
-	DepartmentCodeList string `protobuf:"varint,6,opt,name=department_code_list,json=departmentCodeList,proto3" json:"department_code_list,omitempty" multi_value:"y" db:"department_code" ignore:"y"`
+	DepartmentName     string   `protobuf:"bytes,25,opt,name=department_name,json=departmentName,proto3" json:"department_name,omitempty" db:"department_name" select_func:"name_of_department_by_id" func_arg_name:"department_code" ignore:"y"`
+	NotEquals          []string `protobuf:"bytes,26,rep,name=not_equals,json=notEquals,proto3" json:"not_equals,omitempty"`
+	OrderBy            string   `protobuf:"bytes,27,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
+	OrderDir           string   `protobuf:"bytes,28,opt,name=order_dir,json=orderDir,proto3" json:"order_dir,omitempty"`
+	GroupBy            string   `protobuf:"bytes,29,opt,name=group_by,json=groupBy,proto3" json:"group_by,omitempty"`
+	DepartmentCodeList string   `protobuf:"varint,6,opt,name=department_code_list,json=departmentCodeList,proto3" json:"department_code_list,omitempty" multi_value:"y" db:"department_code" ignore:"y"`
 }
 
 type DispatchableTech struct {
