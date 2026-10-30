@@ -26,7 +26,7 @@ func BuildCreateQuery(target string, source interface{}) (string, []interface{},
 	for i := 0; i < t.NumField(); i++ {
 		field := parseReflection(t, i, target)
 		if field.value.CanInterface() {
-			if notDefault(field.typeStr, field.value.Interface()) && field.name != "" {
+			if notDefault(field.typeStr, field.value.Interface()) && field.name != "" && !field.isPrimaryKey {
 				if i != 0 {
 					qb.Columns.WriteString(", ")
 					qb.Values.WriteString(", ")
