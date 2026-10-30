@@ -1,6 +1,7 @@
 package pbsql
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -24,6 +25,11 @@ const defaultCollation = "utf8mb4_0900_ai_ci"
 
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
 var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
+var orderByPattern = regexp.MustCompile(`(?i)^\s*[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_]*)?(\s+(asc|desc))?(\s*,\s*[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_]*)?(\s+(asc|desc))?)*\s*$`)
+
+// ErrInvalidOrder is returned by the read builders when OrderBy is not a list of
+// column names or OrderDir is not ASC or DESC.
+var ErrInvalidOrder = errors.New("pbsql: order_by must be column names and order_dir ASC or DESC")
 
 type field struct {
 	value          reflect.Value
@@ -180,11 +186,13 @@ func (qb *queryBuilder) writeAndPredicate(f *field, fieldMask []string) {
 	qb.writePredicate(f, fieldMask, andPredicate)
 }*/
 
-func (qb *queryBuilder) getReadResult(table string, v *reflect.Value) string {
+func (qb *queryBuilder) getReadResult(table string, v *reflect.Value) (string, error) {
 	fmt.Fprintf(&qb.Core, queryCore, qb.Fields.String(), table, qb.Joins.String(), qb.Predicate.String())
 	qb.handleGroupBy(v)
-	qb.handleOrder(v)
-	return strings.Replace(strings.Replace(qb.Core.String(), ", FROM", " FROM", 1), "( OR", "(", 1)
+	if err := qb.handleOrder(v); err != nil {
+		return "", err
+	}
+	return strings.Replace(strings.Replace(qb.Core.String(), ", FROM", " FROM", 1), "( OR", "(", 1), nil
 }
 
 func (qb *queryBuilder) getUpdateResult() string {
@@ -200,16 +208,14 @@ func (qb *queryBuilder) handleGroupBy(v *reflect.Value) {
 	}
 }
 
-func (qb *queryBuilder) handleOrder(v *reflect.Value) {
+func (qb *queryBuilder) handleOrder(v *reflect.Value) error {
 	orderBy := v.FieldByName("OrderBy")
 	orderDir := v.FieldByName("OrderDir")
 
 	if orderBy.CanAddr() && orderBy.String() != "" {
-		orderStr := fmt.Sprintf(" order by %s", orderBy.String())
-		if orderDir.CanAddr() && orderDir.String() != "" {
-			orderStr = fmt.Sprintf("%s %s", orderStr, orderDir.String())
-		} else {
-			orderStr = fmt.Sprintf("%s asc", orderStr)
+		orderStr, err := orderClause("", orderBy.String(), orderDir)
+		if err != nil {
+			return err
 		}
 		fmt.Fprint(&qb.Core, orderStr)
 	} else {
@@ -229,19 +235,29 @@ func (qb *queryBuilder) handleOrder(v *reflect.Value) {
 					orderBy := related.FieldByName("OrderBy")
 					orderDir := related.FieldByName("OrderDir")
 					if orderBy.CanAddr() && orderBy.String() != "" && orderBy.CanInterface() {
-						orderStr := fmt.Sprintf(" order by %s.%s", foreignTable, orderBy.String())
-						if orderDir.CanAddr() && orderDir.String() != "" {
-							orderStr = fmt.Sprintf("%s %s", orderStr, orderDir.String())
-						} else {
-							orderStr = fmt.Sprintf("%s asc", orderStr)
+						orderStr, err := orderClause(foreignTable+".", orderBy.String(), orderDir)
+						if err != nil {
+							return err
 						}
 						fmt.Fprint(&qb.Core, orderStr)
 					}
-					return
+					return nil
 				}
 			}
 		}
 	}
+	return nil
+}
+
+func orderClause(prefix, orderBy string, orderDir reflect.Value) (string, error) {
+	dir := "asc"
+	if orderDir.CanAddr() && orderDir.String() != "" {
+		dir = orderDir.String()
+	}
+	if !orderByPattern.MatchString(orderBy) || !(strings.EqualFold(dir, "asc") || strings.EqualFold(dir, "desc")) {
+		return "", ErrInvalidOrder
+	}
+	return fmt.Sprintf(" order by %s%s %s", prefix, orderBy, dir), nil
 }
 
 func isEmptySlice(v reflect.Value) bool {

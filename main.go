@@ -26,7 +26,7 @@ func BuildCreateQuery(target string, source interface{}) (string, []interface{},
 	for i := 0; i < t.NumField(); i++ {
 		field := parseReflection(t, i, target)
 		if field.value.CanInterface() {
-			if notDefault(field.typeStr, field.value.Interface()) && field.name != "" {
+			if notDefault(field.typeStr, field.value.Interface()) && field.name != "" && !field.isPrimaryKey {
 				if i != 0 {
 					qb.Columns.WriteString(", ")
 					qb.Values.WriteString(", ")
@@ -116,7 +116,11 @@ func BuildSearchQuery(target string, source interface{}, searchPhrase string) (s
 	}
 	qb.Predicate.WriteString(")")
 	/* here we choose to use the args returned from BuildReadQuery*/
-	qry, falseArgs, err := sqlx.Named(qb.getReadResult(target, &reflectedValue), source)
+	result, err := qb.getReadResult(target, &reflectedValue)
+	if err != nil {
+		return "", nil, err
+	}
+	qry, falseArgs, err := sqlx.Named(result, source)
 	_, altArgs, _ := BuildReadQuery(target, source)
 	searchArgs := getSearchArgs(len(falseArgs)-len(altArgs), searchPhrase)
 	return qry, append(altArgs, searchArgs...), err
@@ -140,7 +144,10 @@ func BuildCountQuery(target string, source interface{}, fieldMask ...string) (st
 			}
 		}
 	}
-	result := qb.getReadResult(target, &reflectedValue)
+	result, err := qb.getReadResult(target, &reflectedValue)
+	if err != nil {
+		return "", nil, err
+	}
 	return sqlx.Named(result, source)
 }
 
@@ -174,7 +181,10 @@ func BuildReadQuery(target string, source interface{}, fieldMask ...string) (str
 		}
 	}
 	qb.handleDateRange(target, &reflectedValue)
-	result := qb.getReadResult(target, &reflectedValue)
+	result, err := qb.getReadResult(target, &reflectedValue)
+	if err != nil {
+		return "", nil, err
+	}
 	return sqlx.Named(result, source)
 }
 
@@ -216,7 +226,10 @@ func BuildReadQueryWithNotList(target string, source interface{}, notList []stri
 		}
 	}
 	qb.handleDateRange(target, &reflectedValue)
-	result := qb.getReadResult(target, &reflectedValue)
+	result, err := qb.getReadResult(target, &reflectedValue)
+	if err != nil {
+		return "", nil, err
+	}
 	return sqlx.Named(result, source)
 }
 
@@ -261,7 +274,10 @@ func (q *Query) BuildRead() (string, []interface{}, error) {
 		}
 	}
 	qb.handleDateRange(q.Target, &reflectedValue)
-	result := qb.getReadResult(q.Target, &reflectedValue)
+	result, err := qb.getReadResult(q.Target, &reflectedValue)
+	if err != nil {
+		return "", nil, err
+	}
 	return sqlx.Named(result, q.Source)
 }
 
